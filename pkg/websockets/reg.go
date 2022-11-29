@@ -124,14 +124,12 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Logging out", auth.Person.Nickname)
 	UpdateUser(auth.Person.Nickname, loggedin)
 
-	c1, err := r.Cookie(auth.Person.Nickname)
+	c1, err := r.Cookie("testlog")
 	fmt.Println("Cookie---", c1)
 	if err != nil {
 		fmt.Println("On Logout: cookie for user cannot be found!")
 	} else {
 		fmt.Println("Logout: Cookie deleted, user successfully logged out")
-		c1.Name = "Deleted"
-		c1.Value = ""
 		c1.MaxAge = -1
 		auth.Person.Nickname = ""
 		fmt.Println(c1.Name)
