@@ -67,6 +67,7 @@ class MySocket {
     document.getElementById("content").innerHTML = c.body;
   }
   presenceHandler(text) {
+    console.log(text)
     const m = JSON.parse(text)
     for (let p of m.presences) {
       const consp = p
@@ -81,6 +82,7 @@ class MySocket {
       user.className = "presence " + p.nickname 
       document.getElementById("presencecontainer").appendChild(user)
     }
+    console.log("Presences successfully updated")
   }
   postHandler(text) {
     const m = JSON.parse(text)
@@ -164,6 +166,7 @@ class MySocket {
     }));
   }
   sendPresenceRequest() {
+    console.log("Updating Presences....")
     this.mysocket.send(JSON.stringify({
       type: "presence",
     }));

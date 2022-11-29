@@ -1,15 +1,18 @@
 package websockets
+
 import (
 	"fmt"
 	"real-time-forum/pkg/database"
 	"sort"
 	"time"
 )
+
 type PresenceMessage struct {
 	Type      messageType         `json:"type"`
-	Timestamp string              `json:"timestamp"`
-	Presences []database.Presence `json:"presences"`
+	Timestamp string              `json:"timestamp,omitempty"`
+	Presences []database.Presence `json:"presences,omitempty"`
 }
+
 func (m *PresenceMessage) Broadcast(s *socket) error {
 	if s.t == m.Type {
 		if err := s.con.WriteJSON(m); err != nil {
@@ -20,36 +23,49 @@ func (m *PresenceMessage) Broadcast(s *socket) error {
 	}
 	return nil
 }
+
 func (m *PresenceMessage) Handle(s *socket) error {
-	return m.Broadcast(s)
+	presences, err := GetPresences()
+	if err != nil {
+		return fmt.Errorf("OnPresenceConnect (GetPresences) error: %+v", err)
+	}
+	fmt.Println("OnPresenceConnect: get presences successful")
+	c := &PresenceMessage{
+		Type:      presence,
+		Timestamp: "",
+		Presences: presences,
+	}
+	return c.Broadcast(s)
+	// return m.Broadcast(s)
 }
+
 func GetPresences() ([]database.Presence, error) {
 	presences := []database.Presence{}
 	users, err := database.GetUsers()
 	if err != nil {
-		return nil, fmt.Errorf("GetUsers (getPresences) error: %+v\n", err)
+		return nil, fmt.Errorf("GetUsers (getPresences) error: %+v", err)
 	}
 	sort.SliceStable(users[:], func(i, j int) bool {
 		return users[i].Nickname < users[j].Nickname
 	})
 	for _, user := range users {
-		if user.LoggedIn =="true"{
+		if user.LoggedIn == "true" {
 			presences = append(presences, database.Presence{
 				ID:       user.ID,
 				Nickname: user.Nickname,
 				// Online:            bool,
 				// LastContactedTime: created,
 			})
-
 		}
 	}
 	return presences, nil
 }
+
 func OnPresenceConnect(s *socket) error {
 	time.Sleep(1 * time.Second)
 	presences, err := GetPresences()
 	if err != nil {
-		return fmt.Errorf("OnPresenceConnect (GetPresences) error: %+v\n", err)
+		return fmt.Errorf("OnPresenceConnect (GetPresences) error: %+v", err)
 	}
 	c := &PresenceMessage{
 		Type:      presence,
@@ -58,6 +74,7 @@ func OnPresenceConnect(s *socket) error {
 	}
 	return c.Broadcast(s)
 }
+
 // func (data *Forum) GetSessions() ([]Session, error) {
 // 	session := []Session{}
 // 	rows, err := data.DB.Query(`SELECT * FROM session`)
