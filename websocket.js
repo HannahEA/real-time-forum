@@ -39,6 +39,20 @@ class MySocket {
     this.mysocket.send(JSON.stringify(m));
     document.getElementById('chatIPT').value = ""
   }
+
+  sendChatContentRequest(e, chat_id = "") {
+    this.mysocket.send(JSON.stringify({
+      type: "content",
+      resource: e.target.id,
+      chat_id: chat_id,
+    }));
+  }
+  getClickedParticipantID() {
+  }
+  getLoggedInUserID() {
+  }
+
+  
   keypress(e) {
     if (e.keyCode == 13) {
       this.wsType = e.target.id.slice(0, -3)

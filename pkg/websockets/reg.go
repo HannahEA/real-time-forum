@@ -109,7 +109,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 // updates user table
 func UpdateUser(nickname, loggedin string) {
-	stmt, err := database.DB.Prepare(`UPDATE users SET loggedin = ? WHERE nickname = ?`)
+	stmt, err := database.DB.Prepare(`UPDATE "users" SET "loggedin" = ? WHERE "nickname" = ?`)
 	if err != nil {
 		log.Println("Update user:,", err)
 	} else {
