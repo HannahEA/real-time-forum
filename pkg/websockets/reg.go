@@ -109,7 +109,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 // updates user table
 func UpdateUser(nickname, loggedin string) {
-	stmt, err := database.DB.Prepare(`UPDATE users SET loggedin = ? WHERE nickname = ?`)
+	stmt, err := database.DB.Prepare(`UPDATE "users" SET "loggedin" = ? WHERE "nickname" = ?`)
 	if err != nil {
 		log.Println("Update user:,", err)
 	} else {
@@ -124,7 +124,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Logging out", auth.Person.Nickname)
 	UpdateUser(auth.Person.Nickname, loggedin)
 
-	c1, err := r.Cookie("testlog")
+	c1, err := r.Cookie(auth.Person.Nickname)
 	fmt.Println("Cookie---", c1)
 	if err != nil {
 		fmt.Println("On Logout: cookie for user cannot be found!")

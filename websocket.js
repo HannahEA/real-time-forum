@@ -163,6 +163,11 @@ class MySocket {
       chat_id: chat_id,
     }));
   }
+  sendPresenceRequest() {
+    this.mysocket.send(JSON.stringify({
+      type: "presence",
+    }));
+  }
   connectSocket(URI, handler) {
     if (URI === 'chat') {
       this.wsType = 'chat'
@@ -337,4 +342,6 @@ function Logout() {
   }).then((response)=>{
     console.log("Logged out", response)
   })
+  let user= document.getElementById('welcome')
+  user.innerText = "Welcome"
 }
