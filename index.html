@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="styles/styles.css" type="text/css">
+    <link rel="shortcut icon" href="./images/favicon/favicon-32x32.png" type="image/x-icon">
+    <title>Real Time Forum</title>
+</head>
+<body>
+    <header>01 Founders
+        <button id="post"
+            onclick="contentSocket.sendContentRequest(event); postSocket.sendSubmittedPostsRequest()">Home</button>
+        <button id="login" onclick="contentSocket.sendContentRequest(event)">Login/Register</button>
+        <button id="logout" onclick="Logout()">Logout</button>
+        <button id="profile" onclick="contentSocket.sendContentRequest(event)">Profile</button>
+        <h5 id="welcome"></h5>
+    </header>
+    <div class="main-container">
+        <article>
+            <div id="postcontainer">
+                <form id="postform" onsubmit="return false">
+                    <h3>SUBMIT A POST</h3>
+                    <div class="titleField">
+                        <input type="text" style="width: 200px; text-align: center" id="posttitle" name="title"
+                            placeholder="Enter your Title" required />
+                    </div>
+                    <div class="categoryField">
+                        <input type="text" style="width: 200px; text-align: center" id="category" name="category"
+                            placeholder="Enter your Category" required />
+                    </div>
+                    <div class="postBodyField">
+                        <input type="text" style="width: 200px; height: 200px; text-align: center" id="postbody"
+                            name="postbody" placeholder="Enter your Post Body" required />
+                    </div>
+                    <button id="postButton" style="margin-top: 10px; margin-bottom: 10px"
+                        onclick="postSocket.sendNewPostRequest(event)">Submit</button>
+                </form>
+            </div>
+        </article>
+        <section>
+            <div id="content">
+            </div>
+        </section>
+        <aside>
+            <div id="presencecontainer">
+            </div>
+        </aside>
+    </div>
+    <footer></footer>
+    <script src="websocket.js"></script>
+    <!-- <script src="test.js"></script> -->
+    <script>
+        let contentSocket = new MySocket()
+        contentSocket.connectSocket("content", contentSocket.contentHandler);
+        let postSocket = new MySocket()
+        postSocket.connectSocket("post", postSocket.postHandler);
+        let chatSocket = new MySocket()
+        chatSocket.connectSocket("chat", chatSocket.chatHandler);
+        let presenceSocket = new MySocket()
+        presenceSocket.connectSocket("presence", presenceSocket.presenceHandler);
+        // let registerSocket = new MySocket()
+        // registerSocket.connectSocket("register", registerSocket.registerHandler)
+    </script>
+   
+</body>
+</html>
