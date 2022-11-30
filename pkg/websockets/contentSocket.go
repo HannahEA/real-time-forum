@@ -1,4 +1,5 @@
 package websockets
+
 import (
 	"fmt"
 	"real-time-forum/pkg/database"
@@ -6,6 +7,7 @@ import (
 	"text/template"
 	"time"
 )
+
 type ContentMessage struct {
 	Type      messageType `json:"type,omitempty"`
 	Body      string      `json:"body,omitempty"`
@@ -15,6 +17,7 @@ type ContentMessage struct {
 	PostID    string      `json:"post_id,omitempty"`
 	ConvoID   string      `json:"convo_id,omitempty"`
 }
+
 func (m *ContentMessage) Broadcast(s *socket) error {
 	if s.t == m.Type {
 		if err := s.con.WriteJSON(m); err != nil {
@@ -25,6 +28,7 @@ func (m *ContentMessage) Broadcast(s *socket) error {
 	}
 	return nil
 }
+
 func OnContentConnect(s *socket) error {
 	time.Sleep(1 * time.Second)
 	tpl, err := template.ParseGlob("templates/*")
@@ -41,6 +45,7 @@ func OnContentConnect(s *socket) error {
 	}
 	return c.Broadcast(s)
 }
+
 func (m *ContentMessage) Handle(s *socket) error {
 	tpl, err := template.ParseGlob("templates/*")
 	if err != nil {
