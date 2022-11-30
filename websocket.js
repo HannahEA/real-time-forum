@@ -338,6 +338,7 @@ function loginFormData(){
           // logindata.password = result[0].password
           user.innerText = `Hello ${document.cookie.match(logindata.nickname)}`
           alert("you are logged in ")
+          document.getElementById("login").style.display = "none"
           presenceSocket.sendPresenceRequest()
         }
       })
