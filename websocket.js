@@ -83,6 +83,14 @@ class MySocket {
   presenceHandler(text) {
     console.log(text)
     const m = JSON.parse(text)
+
+    let presenceCont = document.getElementById("presencecontainer")
+    if (presenceCont.childElementCount != 0) {
+      while (presenceCont.firstChild) {
+      presenceCont.removeChild(presenceCont.lastChild);
+    }
+    }
+    
     for (let p of m.presences) {
       const consp = p
       let user = document.createElement("button");
@@ -94,7 +102,7 @@ class MySocket {
       user.innerHTML = p.nickname
       user.style.color = 'white'
       user.className = "presence " + p.nickname 
-      document.getElementById("presencecontainer").appendChild(user)
+      presenceCont.appendChild(user)
     }
     console.log("Presences successfully updated")
   }
@@ -143,6 +151,7 @@ class MySocket {
     }
   }
   sendNewPostRequest(e) {
+    console.log("sending new post request")
     let m = {
       type: 'post',
       timestamp: time(),
@@ -179,12 +188,13 @@ class MySocket {
       chat_id: chat_id,
     }));
   }
-  sendPresenceRequest() {
-    console.log("Updating Presences....")
-    this.mysocket.send(JSON.stringify({
-      type: "presence",
-    }));
-  }
+ 
+sendPresenceRequest() {
+  console.log("Updating Presences....")
+  this.mysocket.send(JSON.stringify({
+    type: "presence",
+  }));
+}
   connectSocket(URI, handler) {
     if (URI === 'chat') {
       this.wsType = 'chat'
@@ -328,6 +338,7 @@ function loginFormData(){
           // logindata.password = result[0].password
           user.innerText = `Hello ${document.cookie.match(logindata.nickname)}`
           alert("you are logged in ")
+          presenceSocket.sendPresenceRequest()
         }
       })
 
@@ -347,18 +358,21 @@ function loginFormData(){
 
 }
 
+
 function Logout() {
   fetch("/logout",{
-    headers:{
-      'Accept':'application/json',
-      'Content-Type': 'application/json'
-    },
-    method: "GET",
-    
+headers:{
+'Accept':'application/json',
+'Content-Type': 'application/json'
+},
+method: "GET",
 
-  }).then((response)=>{
-    console.log("Logged out", response)
-  })
-  let user= document.getElementById('welcome')
-  user.innerText = "Welcome"
+
+}).then((response)=>{
+console.log("Logged out", response)
+presenceSocket.sendPresenceRequest()
+})
+let user= document.getElementById('welcome')
+user.innerText = "Welcome"
+
 }

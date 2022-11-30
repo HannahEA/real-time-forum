@@ -10,7 +10,7 @@
         <button id="post"
             onclick="contentSocket.sendContentRequest(event); postSocket.sendSubmittedPostsRequest()">Home</button>
         <button id="login" onclick="contentSocket.sendContentRequest(event)">Login/Register</button>
-        <button id="logout" onclick="Logout(); presenceSocket.sendPresenceRequest()">Logout</button>
+        <button id="logout" onclick="Logout(); ">Logout</button>
         <button id="profile" onclick="contentSocket.sendContentRequest(event)">Profile</button>
         <h5 id="welcome"></h5>
     </header>
@@ -59,6 +59,24 @@
         presenceSocket.connectSocket("presence", presenceSocket.presenceHandler);
         // let registerSocket = new MySocket()
         // registerSocket.connectSocket("register", registerSocket.registerHandler)
+
+        function Logout() {
+        fetch("/logout",{
+    headers:{
+      'Accept':'application/json',
+      'Content-Type': 'application/json'
+    },
+    method: "GET",
+    
+
+  }).then((response)=>{
+    console.log("Logged out", response)
+    presenceSocket.sendPresenceRequest()
+  })
+  let user= document.getElementById('welcome')
+  user.innerText = "Welcome"
+  
+}
     </script>
    
 </body>
