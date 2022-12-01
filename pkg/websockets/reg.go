@@ -100,7 +100,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		cookieValue := uuid.NewV4()
 		Cookie(w, r, user.Nickname, (cookieValue.String()))
 		// sore username of logged in user so you can delete cookie on logout
-		auth.Person.Nickname = nickname
+		auth.Person.Nickname = user.Nickname
 
 	}
 	// sends data to js front end

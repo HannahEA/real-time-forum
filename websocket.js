@@ -362,17 +362,23 @@ function loginFormData(){
   // console.log(t)
 
 }
-
-
+class User {
+  constructor(nickname, userID) {
+    nickname = "";
+    userID =  "";
+  }
+}
 function Logout() {
-  console.log(document.getElementById("login"), 'login')
-console.log(document.getElementById("logout"),'logout')
+  let cookies = document.cookie
+  let username = (cookies.split("="))[0]
+  console.log(cookies)
   fetch("/logout",{
 headers:{
 'Accept':'application/json',
 'Content-Type': 'application/json'
 },
-method: "GET",
+method: "POST",
+body: username
 }).then((response)=>{
 document.getElementById("login").style.display = "block"
 document.getElementById("logout").style.display="none"
