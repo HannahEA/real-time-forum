@@ -60,23 +60,23 @@
         // let registerSocket = new MySocket()
         // registerSocket.connectSocket("register", registerSocket.registerHandler)
 
-        function Logout() {
-        fetch("/logout",{
-    headers:{
-      'Accept':'application/json',
-      'Content-Type': 'application/json'
-    },
-    method: "GET",
+//         function Logout() {
+//         fetch("/logout",{
+//     headers:{
+//       'Accept':'application/json',
+//       'Content-Type': 'application/json'
+//     },
+//     method: "GET",
     
 
-  }).then((response)=>{
-    console.log("Logged out", response)
-    presenceSocket.sendPresenceRequest()
-  })
-  let user= document.getElementById('welcome')
-  user.innerText = "Welcome"
+//   }).then((response)=>{
+//     console.log("Logged out", response)
+//     presenceSocket.sendPresenceRequest()
+//   })
+//   let user= document.getElementById('welcome')
+//   user.innerText = "Welcome"
   
-}
+// }
     </script>
    
 </body>

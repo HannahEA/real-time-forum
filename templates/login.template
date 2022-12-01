@@ -4,7 +4,7 @@
   <br>
     <input type="text" name="nickname" id="nickname-login" class="login-form-field" placeholder="Nickname"> <br> <br>
     <input type="password" name="password" id="password-login" class="login-form-field" placeholder="Password"> <br> <br>
-  <button onclick="loginFormData()">Submit</button>
+  <button onclick="loginFormData()">Login</button>
 </form>
 <h1 style="text-align: center;">REGISTRATION FORM</h1>
 
@@ -43,7 +43,7 @@
   </label> 
   <br>
   <!-- <input type="button" value="submit"/> -->
-  <button onclick="getRegDetails()">Submit</button>
+  <button onclick="getRegDetails()">Register</button>
 </form>
 
     </html>

@@ -122,8 +122,11 @@ class MySocket {
         contentSocket.sendContentRequest(event, post.post_id)
       });
       post.appendChild(button)
+
       console.log(document.getElementById("submittedposts"))
+      if ( document.getElementById("submittedposts") !== null){
       document.getElementById("submittedposts").appendChild(post)
+      }
     }
   }
   sendNewCommentRequest(e) {
@@ -339,6 +342,7 @@ function loginFormData(){
           user.innerText = `Hello ${document.cookie.match(logindata.nickname)}`
           alert("you are logged in ")
           document.getElementById("login").style.display = "none"
+          document.getElementById("logout").style.display="block"
           presenceSocket.sendPresenceRequest()
         }
       })
@@ -361,19 +365,20 @@ function loginFormData(){
 
 
 function Logout() {
+  console.log(document.getElementById("login"), 'login')
+console.log(document.getElementById("logout"),'logout')
   fetch("/logout",{
 headers:{
 'Accept':'application/json',
 'Content-Type': 'application/json'
 },
 method: "GET",
-
-
 }).then((response)=>{
+document.getElementById("login").style.display = "block"
+document.getElementById("logout").style.display="none"
 console.log("Logged out", response)
 presenceSocket.sendPresenceRequest()
 })
 let user= document.getElementById('welcome')
 user.innerText = "Welcome"
-
 }
