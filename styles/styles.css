@@ -1,8 +1,18 @@
 * {
     margin: 0;
 }
-
-
+#post {
+    height: 25px;
+}
+#login {
+    height: 25px;
+}
+#profile {
+    height: 25px;
+}
+#logout {
+    height: 25px;
+}
 body {
     font-size: 16px;
     font-family: 'Fira Sans', sans-serif;
@@ -21,6 +31,8 @@ header {
     background: #7bd88a;
     padding: 3rem;
     padding: 1.5rem 3rem;
+    display: flex;
+    justify-content: space-evenly;
 }
 footer {
     background: #a37bd8;
