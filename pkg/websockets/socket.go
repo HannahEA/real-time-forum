@@ -35,7 +35,10 @@ var (
 
 func SocketCreate(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Socket Request on " + r.RequestURI)
-	con, _ := upgrader.Upgrade(w, r, nil)
+	con, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		fmt.Println(err)
+	}
 	ptrSocket := &socket{
 		con:  con,
 		uuid: uuid.NewV4(),

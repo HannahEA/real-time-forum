@@ -1,5 +1,6 @@
 //TODO: fix const time as it is not formatted correctly and add where time/date is needed
 const time = () => { return new Date().toLocaleString() };
+let uName = ""
 class MySocket {
   wsType = ""
   constructor() {
@@ -130,6 +131,7 @@ class MySocket {
     }
   }
   sendNewCommentRequest(e) {
+    console.log("adding comments",uName)
     let post = document.getElementById('postcontainerforcomments')
     for (const child of post.children) {
       if (containsNumber(child.id)) {
@@ -142,6 +144,7 @@ class MySocket {
               comments: [
                 {
                   post_id: child.id,
+                  nickname: uName,
                   body: document.getElementById('commentbody').value,
                 }
               ]
@@ -154,13 +157,14 @@ class MySocket {
     }
   }
   sendNewPostRequest(e) {
-    console.log("sending new post request")
+    console.log("sending new post request",uName)
     let m = {
       type: 'post',
       timestamp: time(),
       posts: [
         {
-          nickname: e.target.nickname,
+          //nickname: e.target.nickname,
+          nickname: uName,
           title: document.getElementById('posttitle').value,
           categories: document.getElementById('category').value,
           body: document.getElementById('postbody').value,
@@ -263,7 +267,8 @@ function getRegDetails(){
     }
   }
 // POPULATE REGISTER FORM WITH FORM VALUES
-    registerForm.nickname = document.getElementById('nickname').value 
+    registerForm.nickname = document.getElementById('nickname').value
+    uName = registerForm.nickname 
     registerForm.age = document.getElementById('age').value
     registerForm.firstname = document.getElementById('fname').value
     registerForm.lastname = document.getElementById('lname').value
@@ -277,7 +282,7 @@ function getRegDetails(){
     }
     
 // SEND DATA TO BACKEND USING FETCH
-console.log(registerForm)
+  console.log(registerForm)
     if(registerForm.nickname !=""&& registerForm.email !="" &&registerForm.password !="" ){
         
     fetch("/register",{
@@ -308,7 +313,7 @@ console.log(registerForm)
 function loginFormData(){
   loginForm.nickname = document.getElementById('nickname-login').value
   loginForm.password = document.getElementById('password-login').value
-
+  uName = loginForm.nickname
   // console.log(loginForm)
 
   let loginFormJSON = JSON.stringify(loginForm)
