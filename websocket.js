@@ -109,8 +109,11 @@ class MySocket {
     console.log("Presences successfully updated")
   }
   postHandler(text) {
+    console.log("Printing posts....")
     const m = JSON.parse(text)
+    console.log(document.getElementById("submittedposts"))
     for (let p of m.posts) {
+      console.log(document.getElementById("submittedposts"))
       const consp = p
       let post = document.createElement("div");
       post.className = "submittedpost"
@@ -127,7 +130,10 @@ class MySocket {
 
       console.log(document.getElementById("submittedposts"))
       if ( document.getElementById("submittedposts") != null){
+        console.log("appending Postss")
       document.getElementById("submittedposts").appendChild(post)
+      } else {
+        console.log("Submitted posts == null")
       }
     }
   }
@@ -178,11 +184,13 @@ class MySocket {
     document.getElementById('postbody').value = ""
   }
   sendSubmittedPostsRequest() {
+    console.log("Sending post request...")
     this.mysocket.send(JSON.stringify({
       type: "post",
     }));
   }
   sendContentRequest(e, post_id = "") {
+    console.log("Sending content request...")
     this.mysocket.send(JSON.stringify({
       type: "content",
       resource: e.target.id,
@@ -201,6 +209,7 @@ sendPresenceRequest() {
   console.log("Updating Presences....")
   this.mysocket.send(JSON.stringify({
     type: "presence",
+    username: uName,
   }));
 }
   connectSocket(URI, handler) {

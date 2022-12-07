@@ -10,10 +10,12 @@ import (
 type PresenceMessage struct {
 	Type      messageType         `json:"type"`
 	Timestamp string              `json:"timestamp,omitempty"`
+	Username  string              `json:"username,omitempty"`
 	Presences []database.Presence `json:"presences,omitempty"`
 }
 
 func (m *PresenceMessage) Broadcast(s *socket) error {
+
 	if s.t == m.Type {
 		if err := s.con.WriteJSON(m); err != nil {
 			return fmt.Errorf("unable to send (presence) message: %w", err)
@@ -25,7 +27,12 @@ func (m *PresenceMessage) Broadcast(s *socket) error {
 }
 
 func (m *PresenceMessage) Handle(s *socket) error {
-	presences, err := GetPresences()
+	var username string
+	if m != nil {
+		fmt.Println(m.Username)
+		username = m.Username
+	}
+	presences, err := GetPresences(username)
 	if err != nil {
 		return fmt.Errorf("OnPresenceConnect (GetPresences) error: %+v", err)
 	}
@@ -39,7 +46,7 @@ func (m *PresenceMessage) Handle(s *socket) error {
 	// return m.Broadcast(s)
 }
 
-func GetPresences() ([]database.Presence, error) {
+func GetPresences(username string) ([]database.Presence, error) {
 	presences := []database.Presence{}
 	users, err := database.GetUsers()
 	if err != nil {
@@ -49,7 +56,7 @@ func GetPresences() ([]database.Presence, error) {
 		return users[i].Nickname < users[j].Nickname
 	})
 	for _, user := range users {
-		if user.LoggedIn == "true" {
+		if user.LoggedIn == "true" && user.Nickname != username {
 			presences = append(presences, database.Presence{
 				ID:       user.ID,
 				Nickname: user.Nickname,
@@ -63,7 +70,7 @@ func GetPresences() ([]database.Presence, error) {
 
 func OnPresenceConnect(s *socket) error {
 	time.Sleep(1 * time.Second)
-	presences, err := GetPresences()
+	presences, err := GetPresences("")
 	if err != nil {
 		return fmt.Errorf("OnPresenceConnect (GetPresences) error: %+v", err)
 	}
