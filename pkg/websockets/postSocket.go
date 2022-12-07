@@ -77,9 +77,9 @@ func CreatePost(post *database.Post) (*database.Post, error) {
 		post.PostID = uuid.NewV4().String()
 	}
 	// TODO: remove placeholder nickname once login/sessions are working, and hook up the real user who is logged in
-	if post.Nickname == "" {
-		post.Nickname = "Cassidy"
-	}
+	// if post.Nickname == "" {
+	// 	post.Nickname = "Cassidy"
+	// }
 	_, err = stmt.Exec(post.PostID, post.Nickname, post.Title, post.Categories, post.Body)
 	if err != nil {
 		return nil, fmt.Errorf("CreatePost Exec error: %+v\n", err)
@@ -96,9 +96,9 @@ func CreateComment(comment database.Comment) (database.Comment, error) {
 		comment.CommentID = uuid.NewV4().String()
 	}
 	// TODO: remove placeholder nickname once login/sessions are working
-	if comment.Nickname == "" {
-		comment.Nickname = "Cassidy"
-	}
+	// if comment.Nickname == "" {
+	// 	comment.Nickname = "Cassidy"
+	// }
 	_, err = stmt.Exec(comment.CommentID, comment.PostID, comment.Nickname, comment.Body)
 	if err != nil {
 		return comment, fmt.Errorf("CreateComment Exec error: %+v\n", err)

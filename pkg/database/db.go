@@ -83,17 +83,17 @@ func InitialiseDB(path string, insertPlaceholders bool) {
 		log.Fatal(errComments.Error())
 	}
 	// Create the database for each user
-	_, errCategories := sqliteDatabase.Exec(`
-		CREATE TABLE IF NOT EXISTS "categories" (
-			"postID"	TEXT,
-			"Javascript"	INTEGER,
-			"Go"	INTEGER,
-			"Rust"	INTEGER		);
-	`)
-	if errCategories != nil {
-		fmt.Println("CATEGORY TABLE ERROR")
-		log.Fatal(errCategories.Error())
-	}
+	// _, errCategories := sqliteDatabase.Exec(`
+	// 	CREATE TABLE IF NOT EXISTS "categories" (
+	// 		"postID"	TEXT,
+	// 		"Javascript"	INTEGER,
+	// 		"Go"	INTEGER,
+	// 		"Rust"	INTEGER		);
+	// `)
+	// if errCategories != nil {
+	// 	fmt.Println("CATEGORY TABLE ERROR")
+	// 	log.Fatal(errCategories.Error())
+	// }
 	// Create the database for each user
 	_, errConversations := sqliteDatabase.Exec(`
 		CREATE TABLE IF NOT EXISTS "conversations" (
