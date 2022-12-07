@@ -344,6 +344,7 @@ function loginFormData(){
           alert("you are logged in ")
           document.getElementById("login").style.display = "none"
           document.getElementById("logout").style.display="block"
+          document.getElementById("profile").style.display="block"
           presenceSocket.sendPresenceRequest()
         }
       })
@@ -388,6 +389,7 @@ body: logoutDataJSON
 }).then((response)=>{
 document.getElementById("login").style.display = "block"
 document.getElementById("logout").style.display="none"
+document.getElementById("profile").style.display="none"
 console.log("Logged out", response)
 presenceSocket.sendPresenceRequest()
 })
