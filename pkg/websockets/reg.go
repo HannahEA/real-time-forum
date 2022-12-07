@@ -95,8 +95,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	// checks len again to stop panic err && updates user logged in to true in DB and creates cookie
 	if len(users) > 0 && users[0].LoggedIn == "true" {
 		loggedin := "true"
-		UpdateUser(user.Nickname, loggedin)
+
 		cookieValue := uuid.NewV4()
+		UpdateUser(user.Nickname, loggedin, (cookieValue.String()))
 		Cookie(w, r, user.Nickname, (cookieValue.String()))
 		// sore username of logged in user so you can delete cookie on logout
 
@@ -106,13 +107,29 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // updates user table
-func UpdateUser(nickname, loggedin string) {
+func UpdateUser(nickname, loggedin string, id string) {
 	stmt, err := database.DB.Prepare(`UPDATE "users" SET "loggedin" = ? WHERE "nickname" = ?`)
 	if err != nil {
 		log.Println("Update user:,", err)
 	} else {
 		stmt.Exec(loggedin, nickname)
 	}
+	if loggedin == "true" {
+		fmt.Println("Adding cookie to database...")
+		stmt2, err := database.DB.Prepare("INSERT INTO cookies (name, sessionID) VALUES (?, ?)")
+		if err != nil {
+			log.Println("Update cookies table: Login:,", err)
+		} else {
+			stmt2.Exec(nickname, id)
+		}
+	} else {
+		fmt.Println("Removing cookie from database...")
+		_, err := database.DB.Exec("DELETE FROM cookies WHERE name = ?", nickname)
+		if err != nil {
+			log.Println("Update user: Logout:,", err)
+		}
+	}
+
 }
 
 // logout
@@ -126,7 +143,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	// name := "test"
 	loggedin := "false"
 	fmt.Println("Logging out", details.Username)
-	UpdateUser(details.Username, loggedin)
+	UpdateUser(details.Username, loggedin, "")
 
 	c1, err := r.Cookie(details.Username)
 	fmt.Println("Cookie---", c1)

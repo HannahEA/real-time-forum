@@ -126,7 +126,7 @@ class MySocket {
       post.appendChild(button)
 
       console.log(document.getElementById("submittedposts"))
-      if ( document.getElementById("submittedposts") !== null){
+      if ( document.getElementById("submittedposts") != null){
       document.getElementById("submittedposts").appendChild(post)
       }
     }
@@ -348,8 +348,11 @@ function loginFormData(){
           user.innerText = `Hello ${document.cookie.match(logindata.nickname)}`
           alert("you are logged in ")
           document.getElementById("login").style.display = "none"
-          document.getElementById("logout").style.display="block"
-          document.getElementById("profile").style.display="block"
+            document.getElementById("logout").style.display="block"
+            document.getElementById("profile").style.display="block"
+            document.getElementById("postLogin").style.display="none"
+            document.getElementById("postButton").style.display="block"
+            document.getElementById("postButton").style.margin="0 auto"
           presenceSocket.sendPresenceRequest()
         }
       })
@@ -392,9 +395,11 @@ headers:{
 method: "POST",
 body: logoutDataJSON
 }).then((response)=>{
-document.getElementById("login").style.display = "block"
-document.getElementById("logout").style.display="none"
-document.getElementById("profile").style.display="none"
+  document.getElementById("login").style.display = "block"
+  document.getElementById("logout").style.display="none"
+  document.getElementById("profile").style.display="none"
+  document.getElementById("postLogin").style.display="block"
+  document.getElementById("postButton").style.display="none"
 console.log("Logged out", response)
 presenceSocket.sendPresenceRequest()
 })
