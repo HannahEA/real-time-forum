@@ -90,9 +90,9 @@ class MySocket {
       while (presenceCont.firstChild) {
       presenceCont.removeChild(presenceCont.lastChild);
     }
-    }
-    
-    for (let p of m.presences) {
+  }
+    if (m.presences != null ) {
+      for (let p of m.presences) {
       const consp = p
       let user = document.createElement("button");
       user.addEventListener('click', function (event, chat = consp) {
@@ -104,6 +104,7 @@ class MySocket {
       user.style.color = 'white'
       user.className = "presence " + p.nickname 
       presenceCont.appendChild(user)
+    }
     }
     console.log("Presences successfully updated")
   }
@@ -348,6 +349,7 @@ function loginFormData(){
           alert("you are logged in ")
           document.getElementById("login").style.display = "none"
           document.getElementById("logout").style.display="block"
+          document.getElementById("profile").style.display="block"
           presenceSocket.sendPresenceRequest()
         }
       })
@@ -367,20 +369,32 @@ function loginFormData(){
   // console.log(t)
 
 }
-
-
+class User {
+  constructor(nickname, userID) {
+    nickname = "";
+    userID =  "";
+  }
+}
+let logoutData = {
+  username: ""
+}
 function Logout() {
-  console.log(document.getElementById("login"), 'login')
-console.log(document.getElementById("logout"),'logout')
+  let cookies = document.cookie
+  let username = (cookies.split("="))[0]
+  logoutData.username= username
+  console.log(username)
+  let logoutDataJSON = JSON.stringify(logoutData)
   fetch("/logout",{
 headers:{
 'Accept':'application/json',
 'Content-Type': 'application/json'
 },
-method: "GET",
+method: "POST",
+body: logoutDataJSON
 }).then((response)=>{
 document.getElementById("login").style.display = "block"
 document.getElementById("logout").style.display="none"
+document.getElementById("profile").style.display="none"
 console.log("Logged out", response)
 presenceSocket.sendPresenceRequest()
 })

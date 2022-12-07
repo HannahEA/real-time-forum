@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	auth "real-time-forum/pkg/authentication"
 	"real-time-forum/pkg/database"
 
 	uuid "github.com/satori/go.uuid"
@@ -100,7 +99,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		cookieValue := uuid.NewV4()
 		Cookie(w, r, user.Nickname, (cookieValue.String()))
 		// sore username of logged in user so you can delete cookie on logout
-		auth.Person.Nickname = nickname
 
 	}
 	// sends data to js front end
@@ -117,21 +115,26 @@ func UpdateUser(nickname, loggedin string) {
 	}
 }
 
-// logout user NOT WORKING YET
+// logout
+type logoutDetails struct {
+	Username string `json:"username"`
+}
+
 func Logout(w http.ResponseWriter, r *http.Request) {
+	var details logoutDetails
+	err := json.NewDecoder(r.Body).Decode(&details)
 	// name := "test"
 	loggedin := "false"
-	fmt.Println("Logging out", auth.Person.Nickname)
-	UpdateUser(auth.Person.Nickname, loggedin)
+	fmt.Println("Logging out", details.Username)
+	UpdateUser(details.Username, loggedin)
 
-	c1, err := r.Cookie(auth.Person.Nickname)
+	c1, err := r.Cookie(details.Username)
 	fmt.Println("Cookie---", c1)
 	if err != nil {
 		fmt.Println("On Logout: cookie for user cannot be found!")
 	} else {
 		fmt.Println("Logout: Cookie deleted, user successfully logged out")
 		c1.MaxAge = -1
-		auth.Person.Nickname = ""
 		fmt.Println(c1.Name)
 		http.SetCookie(w, c1)
 	}
