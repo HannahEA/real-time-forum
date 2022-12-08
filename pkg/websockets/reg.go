@@ -97,8 +97,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		loggedin := "true"
 
 		cookieValue := uuid.NewV4()
-		UpdateUser(user.Nickname, loggedin, (cookieValue.String()))
-		Cookie(w, r, user.Nickname, (cookieValue.String()))
+		UpdateUser(users[0].Nickname, loggedin, (cookieValue.String()))
+		Cookie(w, r, users[0].Nickname, (cookieValue.String()))
 		// sore username of logged in user so you can delete cookie on logout
 
 	}
