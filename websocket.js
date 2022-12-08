@@ -277,8 +277,7 @@ function getRegDetails(){
     }
   }
 // POPULATE REGISTER FORM WITH FORM VALUES
-    registerForm.nickname = document.getElementById('nickname').value
-    uName = registerForm.nickname 
+    registerForm.nickname = document.getElementById('nickname').value 
     registerForm.age = document.getElementById('age').value
     registerForm.firstname = document.getElementById('fname').value
     registerForm.lastname = document.getElementById('lname').value
@@ -320,10 +319,10 @@ function getRegDetails(){
 
 
 // **********************************LOGIN*******************************************
-function loginFormData(){
+function loginFormData(event){
   loginForm.nickname = document.getElementById('nickname-login').value
   loginForm.password = document.getElementById('password-login').value
-  uName = loginForm.nickname
+  
   // console.log(loginForm)
 
   let loginFormJSON = JSON.stringify(loginForm)
@@ -353,8 +352,9 @@ function loginFormData(){
 
         } else{
           logindata.nickname = result[0].nickname
+          uName = result[0].nickname
           // logindata.password = result[0].password
-          user.innerText = `Hello ${document.cookie.match(logindata.nickname)}`
+          user.innerText = `Hello ${logindata.nickname}`
           alert("you are logged in ")
           document.getElementById("login").style.display = "none"
             document.getElementById("logout").style.display="block"
@@ -363,6 +363,8 @@ function loginFormData(){
             document.getElementById("postButton").style.display="block"
             document.getElementById("postButton").style.margin="0 auto"
           presenceSocket.sendPresenceRequest()
+          // contentSocket.sendContentRequest(event)
+          // postSocket.sendSubmittedPostsRequest() 
         }
       })
 
