@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"runtime/debug"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -30,7 +31,9 @@ var (
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
-	savedSockets = make([]*socket, 0)
+	BrowserSockets  = make(map[string][]*websocket.Conn)
+	
+	SavedSockets    = make([]*websocket.Conn, 0)
 )
 
 func SocketCreate(w http.ResponseWriter, r *http.Request) {
@@ -39,11 +42,10 @@ func SocketCreate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	ptrSocket := &socket{
+	var ptrSocket = &socket{
 		con:  con,
 		uuid: uuid.NewV4(),
 	}
-	// add new case here when added to main.go for handlers
 	switch r.RequestURI {
 	case "/content":
 		ptrSocket.t = content
@@ -71,15 +73,30 @@ func SocketCreate(w http.ResponseWriter, r *http.Request) {
 	default:
 		ptrSocket.t = unknown
 	}
-	savedSockets = append(savedSockets, ptrSocket)
-	ptrSocket.pollSocket()
-	for i, so := range savedSockets {
-		if so.uuid == ptrSocket.uuid {
-			ret := make([]*socket, 0)
-			ret = append(ret, savedSockets[:i]...)
-			savedSockets = append(ret, savedSockets[i+1:]...)
-		}
+	SavedSockets = append(SavedSockets, ptrSocket.con)
+	fmt.Println("SavedSocket", SavedSockets)
+	if len(SavedSockets) == 4 {
+		fmt.Println(SavedSockets)
+
+		name := strconv.Itoa(len(BrowserSockets))
+
+		BrowserSockets[name] = SavedSockets
+		fmt.Println("Browser Sockets", BrowserSockets)
+		var emptySockets []*websocket.Conn
+		SavedSockets = emptySockets
 	}
+	ptrSocket.pollSocket()
+	// for i, so := range SavedSockets {
+	// 	if so.uuid == ptrSocket.uuid {
+	// 		ret := make([]*socket, 0)
+	// 		ret = append(ret, SavedSockets[:i]...)
+	// 		SavedSockets = append(ret, SavedSockets[i+1:]...)
+	// 	}
+
+	// }
+
+	// add new case here when added to main.go for handlers
+
 }
 
 func (s *socket) pollSocket() {
@@ -132,7 +149,8 @@ func (s *socket) pollSocket() {
 				if err := json.Unmarshal(b, m); err != nil {
 					panic(err)
 				}
-				if err := m.Handle(s); err != nil {
+				fmt.Println("value of presence socket", s.con)
+				if err := m.Handle(BrowserSockets, s.con); err != nil {
 					panic(err)
 				}
 			default:

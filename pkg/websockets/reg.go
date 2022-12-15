@@ -15,21 +15,52 @@ import (
 // check if pasword meets criteria number length etc, if nickname is not taken
 func Register(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("getting data")
-
+	//registration data, unmarshall to struct
 	var data database.User
-
 	err := json.NewDecoder(r.Body).Decode(&data)
 	if err != nil {
 		log.Println(err)
 	}
+	// User Exists message
+	type Exist struct {
+		Nickname string
+		Email    string
+	}
+	var Exists Exist
 
 	fmt.Println(data)
 	fmt.Println(data.LoggedIn)
 
-	data.Password = passwordHash(data.Password)
-	//  data.Password = checkPwHash(r.FormValue("password"), data.Password)
-
-	CreateUser(data)
+	// check database for nickname or email match
+	rows, err := database.DB.Query(`SELECT nickname, email FROM users`)
+	if err != nil {
+		log.Println(err)
+	}
+	var nickname string
+	var email string
+	for rows.Next() {
+		err := rows.Scan(&nickname, &email)
+		if err != nil {
+			log.Fatal(err)
+		}
+		//nickname match
+		if data.Nickname == nickname {
+			Exists.Nickname = "true"
+		}
+		//email match
+		if data.Email == email {
+			Exists.Email = "true"
+		}
+	}
+	// create user if no matches found
+	if Exists.Nickname == "" && Exists.Email == "" {
+		Exists.Nickname = "false"
+		Exists.Email = "false"
+		data.Password = passwordHash(data.Password)
+		CreateUser(data)
+	}
+	// send user exists message to javascript
+	json.NewEncoder(w).Encode(Exists)
 }
 
 func passwordHash(str string) string {
@@ -83,6 +114,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 					LoggedIn: "true",
 				})
 			}
+
 		}
 	}
 
@@ -108,12 +140,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 // updates user table
 func UpdateUser(nickname, loggedin string, id string) {
+	fmt.Println("Updaate user:", nickname, " loggedin:", loggedin)
 	stmt, err := database.DB.Prepare(`UPDATE "users" SET "loggedin" = ? WHERE "nickname" = ?`)
 	if err != nil {
 		log.Println("Update user:,", err)
 	} else {
 		stmt.Exec(loggedin, nickname)
 	}
+	stmt.Close()
 	if loggedin == "true" {
 		fmt.Println("Adding cookie to database...")
 		stmt2, err := database.DB.Prepare("INSERT INTO cookies (name, sessionID) VALUES (?, ?)")
@@ -152,7 +186,6 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fmt.Println("Logout: Cookie deleted, user successfully logged out")
 		c1.MaxAge = -1
-		fmt.Println(c1.Name)
 		http.SetCookie(w, c1)
 	}
 }

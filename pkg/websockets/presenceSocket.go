@@ -5,6 +5,8 @@ import (
 	"real-time-forum/pkg/database"
 	"sort"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 type PresenceMessage struct {
@@ -14,7 +16,7 @@ type PresenceMessage struct {
 	Presences []database.Presence `json:"presences,omitempty"`
 }
 
-func (m *PresenceMessage) Broadcast(s *socket) error {
+func (m *PresenceMessage) onLoadBroadcast(s *socket) error {
 
 	if s.t == m.Type {
 		if err := s.con.WriteJSON(m); err != nil {
@@ -25,28 +27,83 @@ func (m *PresenceMessage) Broadcast(s *socket) error {
 	}
 	return nil
 }
+func (m *PresenceMessage) Broadcast(conn *websocket.Conn) error {
+	if err := conn.WriteJSON(m); err != nil {
+		return fmt.Errorf("unable to send (presence) message: %w", err)
+	}
 
-func (m *PresenceMessage) Handle(s *socket) error {
+	return nil
+}
+
+func (m *PresenceMessage) Handle(s map[string][]*websocket.Conn, user *websocket.Conn) error {
+	//get username of user logged in on this browser
 	var username string
 	if m != nil {
-		fmt.Println(m.Username)
+		fmt.Println("Presence Username", m.Username)
+		fmt.Println("Presence connection", &user)
 		username = m.Username
 	}
-	presences, err := GetPresences(username)
+	// get all presences
+	presences, err := GetPresences()
 	if err != nil {
 		return fmt.Errorf("OnPresenceConnect (GetPresences) error: %+v", err)
 	}
 	fmt.Println("OnPresenceConnect: get presences successful")
+	//create message with al presnces to send back to javascript side
 	c := &PresenceMessage{
 		Type:      presence,
 		Timestamp: "",
 		Presences: presences,
 	}
-	return c.Broadcast(s)
-	// return m.Broadcast(s)
+
+	// send presences update to all browsers
+	var broadErr error
+	var oldBrow string
+	for k, brow := range s {
+		fmt.Println("Browser", brow)
+		for i, conn := range brow {
+			fmt.Println("Connection", &conn)
+			//if connection is not the one where the user is logging in send all presences
+			if i == 3 && conn != user && ([]rune(k))[0] >= 48 && ([]rune(k))[0] <= 57 {
+				broadErr = c.Broadcast(conn)
+				if broadErr != nil {
+					return broadErr
+				}
+				fmt.Println("presences in other browsers updated")
+			} else if conn == user {
+				fmt.Println("updating presences in current browser...")
+				//strore key for browser of currenr user
+				oldBrow = k
+				//for brwser that users has logged in to, remove logged in user from user list before broadcasting
+				for j, p := range c.Presences {
+					if p.Nickname == username {
+						c2 := &PresenceMessage{}
+						users := make([]database.Presence, 0)
+						users = append(users, c.Presences[:j]...)
+						users = append(users, c.Presences[j+1:]...)
+						c2 = c
+						c2.Presences = users
+						broadErr = c2.Broadcast(conn)
+						if broadErr != nil {
+							return broadErr
+						}
+						fmt.Println("presences in current browser updated")
+					}
+
+				}
+			}
+
+		}
+	}
+	//change name of browser websocket concections in the map to the username of the logged in user
+
+	BrowserSockets[username] = BrowserSockets[oldBrow]
+	delete(BrowserSockets, oldBrow)
+	fmt.Println("Browser sockets name updated..", BrowserSockets)
+	return broadErr
 }
 
-func GetPresences(username string) ([]database.Presence, error) {
+func GetPresences() ([]database.Presence, error) {
 	presences := []database.Presence{}
 	users, err := database.GetUsers()
 	if err != nil {
@@ -56,7 +113,7 @@ func GetPresences(username string) ([]database.Presence, error) {
 		return users[i].Nickname < users[j].Nickname
 	})
 	for _, user := range users {
-		if user.LoggedIn == "true" && user.Nickname != username {
+		if user.LoggedIn == "true" {
 			presences = append(presences, database.Presence{
 				ID:       user.ID,
 				Nickname: user.Nickname,
@@ -70,7 +127,7 @@ func GetPresences(username string) ([]database.Presence, error) {
 
 func OnPresenceConnect(s *socket) error {
 	time.Sleep(1 * time.Second)
-	presences, err := GetPresences("")
+	presences, err := GetPresences()
 	if err != nil {
 		return fmt.Errorf("OnPresenceConnect (GetPresences) error: %+v", err)
 	}
@@ -79,7 +136,7 @@ func OnPresenceConnect(s *socket) error {
 		Timestamp: "",
 		Presences: presences,
 	}
-	return c.Broadcast(s)
+	return c.onLoadBroadcast(s)
 }
 
 // func (data *Forum) GetSessions() ([]Session, error) {
