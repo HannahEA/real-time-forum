@@ -31,9 +31,9 @@ var (
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
-	BrowserSockets  = make(map[string][]*websocket.Conn)
-	
-	SavedSockets    = make([]*websocket.Conn, 0)
+	BrowserSockets = make(map[string][]*websocket.Conn)
+
+	SavedSockets = make([]*websocket.Conn, 0)
 )
 
 func SocketCreate(w http.ResponseWriter, r *http.Request) {
@@ -149,7 +149,6 @@ func (s *socket) pollSocket() {
 				if err := json.Unmarshal(b, m); err != nil {
 					panic(err)
 				}
-				fmt.Println("value of presence socket", s.con)
 				if err := m.Handle(BrowserSockets, s.con); err != nil {
 					panic(err)
 				}

@@ -28,6 +28,7 @@ func (m *PresenceMessage) onLoadBroadcast(s *socket) error {
 	return nil
 }
 func (m *PresenceMessage) Broadcast(conn *websocket.Conn) error {
+	fmt.Println("presence message", m)
 	if err := conn.WriteJSON(m); err != nil {
 		return fmt.Errorf("unable to send (presence) message: %w", err)
 	}
@@ -48,7 +49,7 @@ func (m *PresenceMessage) Handle(s map[string][]*websocket.Conn, user *websocket
 	if err != nil {
 		return fmt.Errorf("OnPresenceConnect (GetPresences) error: %+v", err)
 	}
-	fmt.Println("OnPresenceConnect: get presences successful")
+	fmt.Println("OnPresenceConnect: get presences successful", presences)
 	//create message with al presnces to send back to javascript side
 	c := &PresenceMessage{
 		Type:      presence,
@@ -65,6 +66,7 @@ func (m *PresenceMessage) Handle(s map[string][]*websocket.Conn, user *websocket
 			fmt.Println("Connection", &conn)
 			//if connection is not the one where the user is logging in send all presences
 			if i == 3 && conn != user && ([]rune(k))[0] >= 48 && ([]rune(k))[0] <= 57 {
+				fmt.Println("message sent to other browsers", c)
 				broadErr = c.Broadcast(conn)
 				if broadErr != nil {
 					return broadErr
@@ -75,22 +77,34 @@ func (m *PresenceMessage) Handle(s map[string][]*websocket.Conn, user *websocket
 				//strore key for browser of currenr user
 				oldBrow = k
 				//for brwser that users has logged in to, remove logged in user from user list before broadcasting
-				for j, p := range c.Presences {
-					if p.Nickname == username {
-						c2 := &PresenceMessage{}
-						users := make([]database.Presence, 0)
-						users = append(users, c.Presences[:j]...)
-						users = append(users, c.Presences[j+1:]...)
-						c2 = c
-						c2.Presences = users
-						broadErr = c2.Broadcast(conn)
-						if broadErr != nil {
-							return broadErr
+				if len(c.Presences) > 1 {
+					for j, p := range c.Presences {
+						if p.Nickname == username {
+							c2 := &PresenceMessage{}
+							users := make([]database.Presence, 0)
+							users = append(users, c.Presences[:j]...)
+							users = append(users, c.Presences[j+1:]...)
+							c2 = c
+							c2.Presences = users
+							broadErr = c2.Broadcast(conn)
+							if broadErr != nil {
+								return broadErr
+							}
+							fmt.Println("presences in current browser updated")
 						}
-						fmt.Println("presences in current browser updated")
-					}
 
+					}
+				} else {
+					c2 := &PresenceMessage{Type: presence, Timestamp: ""}
+					users := make([]database.Presence, 0)
+					c2.Presences = users
+					broadErr = c2.Broadcast(conn)
+					if broadErr != nil {
+						return broadErr
+					}
+					fmt.Println("presences in current browser updated")
 				}
+
 			}
 
 		}
@@ -113,6 +127,7 @@ func GetPresences() ([]database.Presence, error) {
 		return users[i].Nickname < users[j].Nickname
 	})
 	for _, user := range users {
+
 		if user.LoggedIn == "true" {
 			presences = append(presences, database.Presence{
 				ID:       user.ID,
