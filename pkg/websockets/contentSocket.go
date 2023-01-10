@@ -16,6 +16,8 @@ type ContentMessage struct {
 	Resource  string      `json:"resource,omitempty"`
 	PostID    string      `json:"post_id,omitempty"`
 	ConvoID   string      `json:"convo_id,omitempty"`
+	SenderID  string      `json:"sender_id,omitempty"`
+	RecievID  string      `json:"reciev_id,omitempty"`
 }
 
 func (m *ContentMessage) Broadcast(s *socket) error {

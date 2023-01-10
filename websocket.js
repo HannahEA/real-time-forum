@@ -1,6 +1,8 @@
 //TODO: fix const time as it is not formatted correctly and add where time/date is needed
 const time = () => { return new Date().toLocaleString() };
 let uName = ""
+let sender_id
+let reciev_id 
 class MySocket {
   wsType = ""
   constructor() {
@@ -17,11 +19,11 @@ class MySocket {
           participants: [
             //sender: bar userID
             {
-              id: "975496ca-9bfc-4d71-8736-da4b6383a575",
+              id: sender_id,
             },
             //other participants (receiver): foo userID
             {
-              id: "6d01e668-2642-4e55-af73-46f057b731f9",
+              id: reciev_id,
             }
           ],
           chats: [
@@ -29,7 +31,7 @@ class MySocket {
               sender: {
                 // TODO: this is just the first placeholder above, once the user is logged in and their ID is stored client side this ID should represent the logged in user
                 // bar userID
-                id: "975496ca-9bfc-4d71-8736-da4b6383a575",
+                id: sender_id,
               },
               body: document.getElementById('chatIPT').value,
             }
@@ -41,11 +43,12 @@ class MySocket {
     document.getElementById('chatIPT').value = ""
   }
 
-  sendChatContentRequest(e, chat_id = "") {
+  sendChatContentRequest(reciev_id, sender_id) {
     this.mysocket.send(JSON.stringify({
       type: "content",
-      resource: e.target.id,
-      chat_id: chat_id,
+      resource: "chat",
+      sender_id: sender_id,
+      reciev_id: reciev_id
     }));
   }
   getClickedParticipantID() {
@@ -93,15 +96,22 @@ class MySocket {
   }
     if (m.presences != null ) {
       for (let p of m.presences) {
-      const consp = p
+      
       let user = document.createElement("button");
-      user.addEventListener('click', function (event, chat = consp) {
-        event.target.id = "chat"
-        contentSocket.sendChatContentRequest(event, chat.chat_id)
+     
+      reciev_id = p.nickname
+      sender_id = `${getCookieName()}`
+      user.addEventListener('click', function ( ) {
+        // event.target.id = "chat"
+        contentSocket.sendChatContentRequest(reciev_id, sender_id)
       });
       user.id = p.id
       user.innerHTML = p.nickname
       user.style.color = 'white'
+      console.log(p.online, p.nickname)
+      if (p.online === "false") {
+        user.style.backgroundColor = "red"
+      }
       user.className = "presence " + p.nickname 
       presenceCont.appendChild(user)
     }
@@ -197,13 +207,13 @@ class MySocket {
       post_id: post_id,
     }));
   }
-  sendChatContentRequest(e, chat_id = "") {
-    this.mysocket.send(JSON.stringify({
-      type: "content",
-      resource: e.target.id,
-      chat_id: chat_id,
-    }));
-  }
+  // sendChatContentRequest(e, chat_id = "") {
+  //   this.mysocket.send(JSON.stringify({
+  //     type: "content",
+  //     resource: e.target.id,
+  //     chat_id: chat_id,
+  //   }));
+  // }
  
 sendPresenceRequest() {
   console.log("Updating Presences....")
@@ -416,4 +426,12 @@ presenceSocket.sendPresenceRequest()
 })
 let user= document.getElementById('welcome')
 user.innerText = "Welcome"
+}
+
+function getCookieName(){
+  let cookies = document.cookie.split(";")
+  let lastCookieName = cookies[cookies.length -1].split("=")[0].replace(" ", '')
+  // console.log("cookie",cookies, "length", cookies.length)
+  return lastCookieName
+  // console.log("h",lastCookieName)
 }

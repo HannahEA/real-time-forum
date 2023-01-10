@@ -98,7 +98,8 @@ func InitialiseDB(path string, insertPlaceholders bool) {
 	_, errConversations := sqliteDatabase.Exec(`
 		CREATE TABLE IF NOT EXISTS "conversations" (
 			"convoID" TEXT,
-			"participants"	TEXT
+			"participant1"	TEXT,
+			"participant2" TEXT
 			);
 	`)
 	if errConversations != nil {

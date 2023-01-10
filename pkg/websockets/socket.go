@@ -32,8 +32,9 @@ var (
 		WriteBufferSize: 1024,
 	}
 	BrowserSockets = make(map[string][]*websocket.Conn)
-
-	SavedSockets = make([]*websocket.Conn, 0)
+	SavedSockets   = make([]*websocket.Conn, 0)
+	Browser        = make(map[string]*socket)
+	allBrowsers    = make(map[string](map[string]*socket))
 )
 
 func SocketCreate(w http.ResponseWriter, r *http.Request) {
@@ -74,14 +75,15 @@ func SocketCreate(w http.ResponseWriter, r *http.Request) {
 		ptrSocket.t = unknown
 	}
 	SavedSockets = append(SavedSockets, ptrSocket.con)
+	Browser[r.RequestURI] = ptrSocket
 	fmt.Println("SavedSocket", SavedSockets)
 	if len(SavedSockets) == 4 {
 		fmt.Println(SavedSockets)
-
 		name := strconv.Itoa(len(BrowserSockets))
-
 		BrowserSockets[name] = SavedSockets
+		// allBrowsers[uuid.NewV4().String()] = Browser
 		fmt.Println("Browser Sockets", BrowserSockets)
+		// fmt.Println("Browser Sockets", allBrowsers)
 		var emptySockets []*websocket.Conn
 		SavedSockets = emptySockets
 	}
