@@ -11,9 +11,12 @@ class MySocket {
   // TODO: insert user ID variable, participants needs to be filled
   sendNewChatRequest() {
     console.log("new chat request")
+    console.log(reciev_id)
+    console.log(time())
     let m = {
       type: 'chat',
-      timestamp: time(),
+      timestamp: `${time()}`,
+      ConvoID: "1234",
       conversations: [
         {
           participants: [
@@ -42,6 +45,51 @@ class MySocket {
     this.mysocket.send(JSON.stringify(m));
     document.getElementById('chatIPT').value = ""
   }
+
+  getChats(reciev_id){
+
+    console.log(reciev_id)
+    let getCorrectChats ={
+      user1: getCookieName(),
+      user2: reciev_id,
+    }
+    let stringified = JSON.stringify(getCorrectChats)
+    fetch("/getChats",{
+      headers:{
+        'Accept':'application/json',
+        'Content-Type': 'application/json'
+      },
+      method: "POST",
+      body: stringified
+    })
+    .then(response => response.json())
+    .then(data => chatSocket.text(data))
+    .catch(error => console.log(error))
+  }
+
+  text(data){
+    console.log(data)
+    let m = {
+      type: 'chat',
+      timestamp: time(),
+      conversations:[
+        {
+          participants: [
+            {
+              id: `${getCookieName()}`
+              // id: `${data.conversations.chats.id}`
+            },
+            {
+              id: `${reciev_id}`
+            }
+          ],
+          chats: data
+        }
+      ]
+      }
+    chatSocket.chatHandler(m)
+  }
+
 
   sendChatContentRequest(reciev_id, sender_id) {
     this.mysocket.send(JSON.stringify({
@@ -99,11 +147,14 @@ class MySocket {
       
       let user = document.createElement("button");
      
-      reciev_id = p.nickname
-      sender_id = `${getCookieName()}`
+      
+      
       user.addEventListener('click', function ( ) {
+        reciev_id = p.nickname
+        sender_id = `${getCookieName()}`
         // event.target.id = "chat"
         contentSocket.sendChatContentRequest(reciev_id, sender_id)
+        chatSocket.getChats(reciev_id)
       });
       user.id = p.id
       user.innerHTML = p.nickname
