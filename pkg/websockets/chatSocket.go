@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"real-time-forum/pkg/database"
 
+	"github.com/gorilla/websocket"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -16,9 +17,9 @@ type ChatMessage struct {
 	Conversations []*database.Conversation `json:"conversations"`
 }
 
-func Broadcast(s *socket, m *database.Chat) error {
+func Broadcast(s *websocket.Conn, m *database.Chat) error {
 	// if s.t == m.Type {
-	if err := s.con.WriteJSON(m); err != nil {
+	if err := s.WriteJSON(m); err != nil {
 		return fmt.Errorf("unable to send (chat) message: %w", err)
 	}
 	// } else {
@@ -30,25 +31,14 @@ func (m *ChatMessage) Handle(s *socket) error {
 	fmt.Println("chat message func", m.Conversations, "type", m.Type)
 	fmt.Println("time after this", m.Timestamp, "chat")
 	var time = m.Timestamp
-	// if len(m.Conversations) == 0 {
-	// 	fmt.Println("no converation to be handled..")
-	// 	conversations, err := database.GetPopulatedConversations(nil)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	c := &ChatMessage{
-	// 		Type:          chat,
-	// 		Conversations: conversations,
-	// 	}
-	// 	return c.Broadcast(s)
-	// }
 	var convoCheckID string
+	var reciever string
 	for i, convo := range m.Conversations {
 		var participant1 = convo.Participants[0]
 		// var p1 = fmt.Sprintf("%+v", participant1.ID)
 		var participant2 = convo.Participants[1]
+		reciever = convo.Participants[1].ID
 		var partOfConvo, _ = usersPartofConvo(participant1.ID, participant2.ID, true)
-		// check both orders of username in the database so 2 convos arent created for the same user
 		var convoCheck, _ = database.GetUserFromConversations(participant1.ID, participant2.ID)
 		if partOfConvo {
 			convo.ConvoID = convoCheck.ConvoID
@@ -80,19 +70,24 @@ func (m *ChatMessage) Handle(s *socket) error {
 		}
 		m.Conversations[i] = convo
 	}
-	fmt.Println("chat handler: new convo created", m.Conversations)
-	c, err := database.GetPopulatedConversations(m.Conversations)
-
-	if err != nil {
-		return fmt.Errorf("ChatSocket Handle (GetPopulatedConversations) error: %w", err)
-	}
-	m.Conversations = c
-	// b, _ := json.Marshal(m.Conversations)
-	// fmt.Println(string(b))
 
 	var chats, _ = database.GetChat(convoCheckID)
 	var newChat = &chats[len(chats)-1]
-	return Broadcast(s, newChat)
+	// var rCon = BrowserSockets[reciever][2]
+
+	err2 := Broadcast(s.con, newChat)
+	if err2 != nil {
+		fmt.Print("Chat Handler: unable to broadcast new message to sender")
+		return err2
+	}
+	fmt.Println("Chat Handler: broadcast new message to sender")
+	err3 := Broadcast(BrowserSockets[reciever][0], newChat)
+	if err3 != nil {
+		fmt.Print("Chat Handler: unable to broadcast new message to reciever", reciever)
+		return err3
+	}
+	fmt.Println("Chat Handler: broadcast new message to reciever", reciever)
+	return nil
 }
 func CreateChat(chat database.Chat) (string, error) {
 	stmt, err := database.DB.Prepare("INSERT INTO chats (convoID, chatID, sender, date, body) VALUES (?, ?, ?, ?, ?);")
