@@ -48,7 +48,7 @@ class MySocket {
 
   getChats(reciev_id){
 
-    console.log(reciev_id)
+    // console.log(reciev_id)
     let getCorrectChats ={
       user1: getCookieName(),
       user2: reciev_id,
@@ -68,7 +68,7 @@ class MySocket {
   }
 
   text(data){
-    console.log(data)
+
     let m = {
       type: 'chat',
       timestamp: time(),
@@ -87,6 +87,7 @@ class MySocket {
         }
       ]
       }
+      
     chatSocket.chatHandler(m)
   }
 
@@ -117,16 +118,36 @@ class MySocket {
   //   console.log("register handler")
   // }
   chatHandler(text) {
-    const m = JSON.parse(text)
-    for (let c of m.conversations) {
-      for (let p of c.chats) {
-        let chat = document.createElement("div");
-        chat.className = "submittedchat"
-        chat.id = p.chat_id
-        chat.innerHTML = "<b>Me: " + p.sender.nickname + "</b>" + "<br>" + "<b>Date: " + "</b>" + p.date + "<br>" + p.body + "<br>";
-        document.getElementById("chatcontainer").appendChild(chat)
+    let chats = document.getElementsByClassName("submittedchat").length > 0
+    if (chats.length > 0) {
+      for(let c of chats) {
+        console.log("removing chat")
+        c.remove()
       }
     }
+
+    console.log("printing chats..")
+   console.log("type of chat message", typeof text)
+    if (typeof text == "string") {
+      console.log("new chat message", text)
+      const x = JSON.parse(text)
+        let chat = document.createElement("div");
+        chat.className = "submittedchat"
+        chat.id = x.chat_id
+        chat.innerHTML = "<b>Me: " + x.sender.id + "</b>" + "<br>" + "<b>Date: " + "</b>" + x.date + "<br>" + x.body + "<br>";
+        document.getElementById("chatcontainer").appendChild(chat)
+     } else{
+      for (let c of text.conversations) {
+        for (let p of c.chats) {
+          let chat = document.createElement("div");
+          chat.className = "submittedchat"
+          chat.id = p.chat_id
+          chat.innerHTML = "<b>Me: " + p.sender.id + "</b>" + "<br>" + "<b>Date: " + "</b>" + p.date + "<br>" + p.body + "<br>";
+          document.getElementById("chatcontainer").appendChild(chat)
+        }
+      }
+     }
+    
   }
   contentHandler(text) {
     const c = JSON.parse(text)

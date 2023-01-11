@@ -418,5 +418,6 @@ func GetUserFromConversations(nickname, nickname2 string) (ConvoParticipants, er
 	if err != nil {
 		return user, err
 	}
+	fmt.Println(user, "users part of convo")
 	return user, nil
 }
