@@ -123,7 +123,7 @@ class MySocket {
         let chat = document.createElement("div");
         chat.className = "submittedchat"
         chat.id = p.chat_id
-        chat.innerHTML = "<b>Me: " + p.sender.nickname + "</b>" + "<br>" + "<b>Date: " + "</b>" + p.date + "<br>" + p.body + "<br>";
+        chat.innerHTML = "<b>Me: " + p.sender.id + "</b>" + "<br>" + "<b>Date: " + "</b>" + p.date + "<br>" + p.body + "<br>";
         document.getElementById("chatcontainer").appendChild(chat)
       }
     }
