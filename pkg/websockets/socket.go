@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"runtime/debug"
-	"strconv"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -33,8 +32,6 @@ var (
 	}
 	BrowserSockets = make(map[string][]*websocket.Conn)
 	SavedSockets   = make([]*websocket.Conn, 0)
-	Browser        = make(map[string]*socket)
-	allBrowsers    = make(map[string](map[string]*socket))
 )
 
 func SocketCreate(w http.ResponseWriter, r *http.Request) {
@@ -47,6 +44,8 @@ func SocketCreate(w http.ResponseWriter, r *http.Request) {
 		con:  con,
 		uuid: uuid.NewV4(),
 	}
+	SavedSockets = append(SavedSockets, ptrSocket.con)
+	fmt.Println("SavedSocket", SavedSockets)
 	switch r.RequestURI {
 	case "/content":
 		ptrSocket.t = content
@@ -67,37 +66,26 @@ func SocketCreate(w http.ResponseWriter, r *http.Request) {
 	case "/presence":
 		ptrSocket.t = presence
 		// loads the presence list on window load
-		if err := OnPresenceConnect(ptrSocket); err != nil {
+		var user = &PresenceMessage{
+			Username: User1.Nickname,
+		}
+		if err := user.Handle(); err != nil {
 			fmt.Println(err)
 			return
 		}
 	default:
 		ptrSocket.t = unknown
 	}
-	SavedSockets = append(SavedSockets, ptrSocket.con)
-	Browser[r.RequestURI] = ptrSocket
-	fmt.Println("SavedSocket", SavedSockets)
-	if len(SavedSockets) == 4 {
-		fmt.Println(SavedSockets)
-		name := strconv.Itoa(len(BrowserSockets))
-		BrowserSockets[name] = SavedSockets
-		// allBrowsers[uuid.NewV4().String()] = Browser
-		fmt.Println("Browser Sockets", BrowserSockets)
-		// fmt.Println("Browser Sockets", allBrowsers)
-		var emptySockets []*websocket.Conn
-		SavedSockets = emptySockets
-	}
-	ptrSocket.pollSocket()
-	// for i, so := range SavedSockets {
-	// 	if so.uuid == ptrSocket.uuid {
-	// 		ret := make([]*socket, 0)
-	// 		ret = append(ret, SavedSockets[:i]...)
-	// 		SavedSockets = append(ret, SavedSockets[i+1:]...)
-	// 	}
 
+	// if len(SavedSockets) == 4 {
+	// 	fmt.Println(SavedSockets)
+	// 	name := strconv.Itoa(len(BrowserSockets))
+	// 	BrowserSockets[name] = SavedSockets
+	// 	fmt.Println("Browser Sockets", BrowserSockets)
+	// 	var emptySockets []*websocket.Conn
+	// 	SavedSockets = emptySockets
 	// }
-
-	// add new case here when added to main.go for handlers
+	ptrSocket.pollSocket()
 
 }
 
@@ -112,6 +100,7 @@ func (s *socket) pollSocket() {
 		for {
 			b, err := s.read()
 			if err != nil {
+				fmt.Println(s.t.String() + " socket closed")
 				panic(err)
 			} else if b == nil {
 				fmt.Println(s.t.String() + " socket closed")
@@ -151,7 +140,7 @@ func (s *socket) pollSocket() {
 				if err := json.Unmarshal(b, m); err != nil {
 					panic(err)
 				}
-				if err := m.Handle(BrowserSockets, s.con); err != nil {
+				if err := m.Handle(); err != nil {
 					panic(err)
 				}
 			default:

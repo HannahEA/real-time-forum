@@ -46,7 +46,7 @@ class MySocket {
     document.getElementById('chatIPT').value = ""
   }
 
-  getChats(reciev_id){
+  getAllChats(reciev_id){
 
     // console.log(reciev_id)
     let getCorrectChats ={
@@ -92,17 +92,11 @@ class MySocket {
   }
 
 
-  sendChatContentRequest(reciev_id, sender_id) {
+  sendChatContentRequest() {
     this.mysocket.send(JSON.stringify({
       type: "content",
       resource: "chat",
-      sender_id: sender_id,
-      reciev_id: reciev_id
     }));
-  }
-  getClickedParticipantID() {
-  }
-  getLoggedInUserID() {
   }
 
   
@@ -114,9 +108,7 @@ class MySocket {
       }
     }
   }
-  // registerHandler(text){
-  //   console.log("register handler")
-  // }
+
   chatHandler(text) {
     let chats = document.getElementsByClassName("submittedchat").length > 0
     if (chats.length > 0) {
@@ -135,7 +127,7 @@ class MySocket {
         chat.className = "submittedchat"
         chat.id = x.chat_id
         chat.innerHTML = "<b>Me: " + x.sender.id + "</b>" + "<br>" + "<b>Date: " + "</b>" + x.date + "<br>" + x.body + "<br>";
-        document.getElementById("chatcontainer").appendChild(chat)
+        document.getElementById("newchatscontainer").appendChild(chat)
      } else{
       for (let c of text.conversations) {
         for (let p of c.chats) {
@@ -143,7 +135,7 @@ class MySocket {
           chat.className = "submittedchat"
           chat.id = p.chat_id
           chat.innerHTML = "<b>Me: " + p.sender.id + "</b>" + "<br>" + "<b>Date: " + "</b>" + p.date + "<br>" + p.body + "<br>";
-          document.getElementById("chatcontainer").appendChild(chat)
+          document.getElementById("newchatscontainer").appendChild(chat)
         }
       }
      }
@@ -167,15 +159,12 @@ class MySocket {
       for (let p of m.presences) {
       
       let user = document.createElement("button");
-     
-      
-      
       user.addEventListener('click', function ( ) {
         reciev_id = p.nickname
         sender_id = `${getCookieName()}`
         // event.target.id = "chat"
-        contentSocket.sendChatContentRequest(reciev_id, sender_id)
-        chatSocket.getChats(reciev_id)
+        contentSocket.sendChatContentRequest()
+        chatSocket.getAllChats(reciev_id)
       });
       user.id = p.id
       user.innerHTML = p.nickname
@@ -291,7 +280,7 @@ sendPresenceRequest() {
   console.log("Updating Presences....")
   this.mysocket.send(JSON.stringify({
     type: "presence",
-    username: uName,
+    username: `${getCookieName()}`,
   }));
 }
   connectSocket(URI, handler) {
@@ -310,9 +299,11 @@ sendPresenceRequest() {
     if (URI === 'presence') {
       this.wsType = 'presence'
       console.log("Presence Websocket Connected");
+      
     }
     var socket = new WebSocket("ws://localhost:8080/" + URI);
     this.mysocket = socket;
+    
     socket.onmessage = (e) => {
       // console.log("socket message")
       handler(e.data, false);
@@ -323,6 +314,7 @@ sendPresenceRequest() {
     socket.onclose = () => {
       // console.log("socket closed");
     };
+   
   }
 
 }
@@ -387,20 +379,26 @@ function getRegDetails(){
     }).then((response)=>{
       response.text().then(function (jsonRegForm){
         let result = JSON.parse(jsonRegForm)
-        console.log(result)
+        if (result.Email === "true" || result.Nickname === "true") {
+          alert("Nickname or email already exists")
+        } else {
+          alert("successfully registered")
+        }
       })
 
     }).catch((error)=>{
       console.log(error)
     })
-
     document.getElementById('register').reset()
-    alert("successfully registered")
+    
   }
 }
 
 
 // **********************************LOGIN*******************************************
+var presenceSocket = new MySocket
+var  chatSocket = new MySocket
+
 function loginFormData(event){
   loginForm.nickname = document.getElementById('nickname-login').value
   loginForm.password = document.getElementById('password-login').value
@@ -436,6 +434,7 @@ function loginFormData(event){
           logindata.nickname = result[0].nickname
           uName = result[0].nickname
           // logindata.password = result[0].password
+          let user= document.getElementById('welcome')
           user.innerText = `Hello ${logindata.nickname}`
           alert("you are logged in ")
           document.getElementById("login").style.display = "none"
@@ -444,7 +443,10 @@ function loginFormData(event){
             document.getElementById("postLogin").style.display="none"
             document.getElementById("postButton").style.display="block"
             document.getElementById("postButton").style.margin="0 auto"
-          presenceSocket.sendPresenceRequest()
+
+            chatSocket.connectSocket("chat", chatSocket.chatHandler)
+            presenceSocket.connectSocket("presence", presenceSocket.presenceHandler);
+          
           // contentSocket.sendContentRequest(event)
           // postSocket.sendSubmittedPostsRequest() 
         }
@@ -460,7 +462,7 @@ function loginFormData(event){
 
   document.getElementById('login-form').reset()
 
-    let user= document.getElementById('welcome')
+ 
   // document.getElementById('login-form').reset()
   // console.log(t)
 
@@ -494,7 +496,12 @@ body: logoutDataJSON
   document.getElementById("postLogin").style.display="block"
   document.getElementById("postButton").style.display="none"
 console.log("Logged out", response)
-presenceSocket.sendPresenceRequest()
+let presenceCont = document.getElementById("presencecontainer")
+if (presenceCont.childElementCount != 0) {
+  while (presenceCont.firstChild) {
+  presenceCont.removeChild(presenceCont.lastChild);
+}
+}
 })
 let user= document.getElementById('welcome')
 user.innerText = "Welcome"
@@ -506,4 +513,27 @@ function getCookieName(){
   // console.log("cookie",cookies, "length", cookies.length)
   return lastCookieName
   // console.log("h",lastCookieName)
+}
+
+let content = {
+  postID :  "",
+  types : "" 
+}
+function loadContent(type, postID){
+  content.types = type
+  content.postID = postID
+  let stringified = JSON.stringify(content)
+  fetch("/loadContent",{
+    headers:{
+      'Accept':'application/json',
+      'Content-Type': 'application/json'
+    },
+    method: "POST",
+    body: stringified
+  })
+  .then(response => response.json())
+  .then(data =>{
+    const c = JSON.parse(data)
+    document.getElementById("content").innerHTML = c.body
+  }).catch(error => console.log(error))
 }

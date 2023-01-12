@@ -68,11 +68,7 @@ func (m *ContentMessage) Handle(s *socket) error {
 			return fmt.Errorf("loginExecuteTemplate error: %+v\n", err)
 		}
 	case "chat":
-		chats, err := database.GetChats()
-		if err != nil {
-			return fmt.Errorf("Unable to get chats for chat template: %w", err)
-		}
-		if err := tpl.ExecuteTemplate(sb, "chat.template", database.FilterChatsForConvo(m.ConvoID, chats)); err != nil {
+		if err := tpl.ExecuteTemplate(sb, "chat.template", nil); err != nil {
 			return fmt.Errorf("Chat ExecuteTemplate error: %+v\n", err)
 		}
 	case "comment":
@@ -110,3 +106,65 @@ func (m *ContentMessage) Handle(s *socket) error {
 	m.Body = sb.String()
 	return m.Broadcast(s)
 }
+
+// func loadContent(w http.ResponseWriter, r *http.Request) error {
+// 	var resource string
+// 	err := json.NewDecoder(r.Body).Decode(&resource)
+// 	fmt.Println("content request type:", resource)
+// 	tpl, err := template.ParseGlob("templates/*")
+// 	if err != nil {
+// 		return err
+// 	}
+// 	sb := &strings.Builder{}
+// 	switch resource {
+// 	case "post":
+// 		if err := tpl.ExecuteTemplate(sb, "home.template", nil); err != nil {
+// 			return fmt.Errorf("Home ExecuteTemplate error: %w", err)
+// 		}
+// 	case "profile":
+// 		if err := tpl.ExecuteTemplate(sb, "profile.template", nil); err != nil {
+// 			return fmt.Errorf("Profile ExecuteTemplate error: %w", err)
+// 		}
+// 	case "login":
+// 		if err := tpl.ExecuteTemplate(sb, "login.template", nil); err != nil {
+// 			return fmt.Errorf("loginExecuteTemplate error: %+v\n", err)
+// 		}
+// 	case "chat":
+// 		if err := tpl.ExecuteTemplate(sb, "chat.template", nil); err != nil {
+// 			return fmt.Errorf("Chat ExecuteTemplate error: %+v\n", err)
+// 		}
+// 	case "comment":
+// 		if m.PostID == "" {
+// 			return fmt.Errorf("Empty post ID when requesting comments")
+// 		}
+// 		comments, err := database.GetComments()
+// 		if err != nil {
+// 			return fmt.Errorf("Unable to get comments for comment template: %w", err)
+// 		}
+// 		comments = database.FilterCommentsForPost(m.PostID, comments)
+// 		allPosts, err := database.GetPosts()
+// 		if err != nil {
+// 			return fmt.Errorf("Unable to get posts for comment template: %w", err)
+// 		}
+// 		newPost := database.Post{}
+// 		for _, pst := range allPosts {
+// 			if pst.PostID == m.PostID {
+// 				newPost = *pst
+// 			}
+// 		}
+// 		commentTemplateData := struct {
+// 			Post     database.Post
+// 			Comments []database.Comment
+// 		}{
+// 			Post:     newPost,
+// 			Comments: comments,
+// 		}
+// 		if err := tpl.ExecuteTemplate(sb, "comment.template", commentTemplateData); err != nil {
+// 			return fmt.Errorf("Comment ExecuteTemplate error: %+v\n", err)
+// 		}
+// 	default:
+// 		return fmt.Errorf("template %s not found", m.Resource)
+// 	}
+// 	m.Body = sb.String()
+// 	return m.Broadcast(s)
+// }

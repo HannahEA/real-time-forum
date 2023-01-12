@@ -40,6 +40,7 @@ func main() {
 	// when adding a new websocket endpoint make sure to update the switch case in the websocket connection function to account for it
 	myhttp.HandleFunc("/chat", socket.SocketCreate)
 	myhttp.HandleFunc("/content", socket.SocketCreate)
+	// myhttp.HandleFunc("/loadContent", socket.loadContent)
 	myhttp.HandleFunc("/post", socket.SocketCreate)
 	myhttp.HandleFunc("/presence", socket.SocketCreate)
 	myhttp.HandleFunc("/comment", socket.SocketCreate)
