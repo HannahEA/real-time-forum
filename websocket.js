@@ -110,26 +110,56 @@ class MySocket {
   }
 
   chatHandler(text) {
-    let chats = document.getElementsByClassName("submittedchat").length > 0
-    if (chats.length > 0) {
-      for(let c of chats) {
-        console.log("removing chat")
-        c.remove()
-      }
-    }
-
-    console.log("printing chats..")
+    
+   console.log("printing chats..")
    console.log("type of chat message", typeof text)
     if (typeof text == "string") {
+      //new message
+      // is the chat box open?
+      let chatBox = document.getElementById("newchatscontainer")
+      console.log("chatBox", chatBox)
+      if (typeof chatBox != "undefined") {
+         // Yes =
       console.log("new chat message", text)
-      const x = JSON.parse(text)
+      let x = JSON.parse(text)
         let chat = document.createElement("div");
         chat.className = "submittedchat"
         chat.id = x.chat_id
         chat.innerHTML = "<b>Me: " + x.sender.id + "</b>" + "<br>" + "<b>Date: " + "</b>" + x.date + "<br>" + x.body + "<br>";
         document.getElementById("newchatscontainer").appendChild(chat)
+      } else {
+        //No = send POST fetch with message containing sender and reciever
+        x.notification = true
+        x.reciever = {id:`${getCookieName()}`}
+        var stringified = JSON.stringify(x)
+        fetch("/notification",{
+         headers:{
+           'Accept':'application/json',
+           'Content-Type': 'application/json'
+         },
+         method: "POST",
+         body: stringified
+       })
+       .then(response => response.json())
+       .then((data)=>{
+         //when confirmation is reciever add class to presence button that adds notification symbol
+         let chat = JSON.parse(data)
+         let button = document.getElementbyClass(`${chat.sender}`)
+         button.style.backgroundColor = "purple"
+       })
+      }  
      } else{
+      // delete other chat when opening a new one 
+    //   let chats = document.getElementsByClassName("submittedchat").length > 0
+    // if (chats.length > 0) {
+    //   for(let c of chats) {
+    //     console.log("removing chat")
+    //     c.remove()
+    //   }
+    // }
+      //full chat histry
       for (let c of text.conversations) {
+        
         for (let p of c.chats) {
           let chat = document.createElement("div");
           chat.className = "submittedchat"
@@ -137,6 +167,7 @@ class MySocket {
           chat.innerHTML = "<b>Me: " + p.sender.id + "</b>" + "<br>" + "<b>Date: " + "</b>" + p.date + "<br>" + p.body + "<br>";
           document.getElementById("newchatscontainer").appendChild(chat)
         }
+        
       }
      }
     
@@ -148,34 +179,48 @@ class MySocket {
   presenceHandler(text) {
     console.log(text)
     const m = JSON.parse(text)
-
     let presenceCont = document.getElementById("presencecontainer")
+    //remove old list 
     if (presenceCont.childElementCount != 0) {
       while (presenceCont.firstChild) {
       presenceCont.removeChild(presenceCont.lastChild);
-    }
-  }
-    if (m.presences != null ) {
-      for (let p of m.presences) {
-      
-      let user = document.createElement("button");
-      user.addEventListener('click', function ( ) {
-        reciev_id = p.nickname
-        sender_id = `${getCookieName()}`
-        // event.target.id = "chat"
-        contentSocket.sendChatContentRequest()
-        chatSocket.getAllChats(reciev_id)
-      });
-      user.id = p.id
-      user.innerHTML = p.nickname
-      user.style.color = 'white'
-      console.log(p.online, p.nickname)
-      if (p.online === "false") {
-        user.style.backgroundColor = "red"
       }
-      user.className = "presence " + p.nickname 
-      presenceCont.appendChild(user)
     }
+    if (m.presences != null ) {
+      //for each user
+      for (let p of m.presences) {
+      //create chat button
+        let user = document.createElement("button");
+        user.addEventListener('click', function ( ) {
+          reciev_id = p.nickname
+          sender_id = `${getCookieName()}`
+          // check for notifictaion symbol on button if present remove class before requesting all chats 
+          if (document.getElementById(`${p.id}`).style.backgroundColor="purple" ){
+            if (user.classList.contains('offline')){
+             user.style.backgroundColor = 'red'
+            } else {
+             user.style.backgroundColor = 'black'
+            }
+          }
+          // Notifications()
+          contentSocket.sendChatContentRequest()
+          chatSocket.getAllChats(reciev_id)
+        });
+       
+        user.id = p.id
+        user.innerHTML = p.nickname
+        user.style.color = 'white'
+        console.log(p.online, p.nickname)
+        user.className = "presence " + p.nickname  
+        if (p.online === "false") {
+         user.style.backgroundColor = "red"
+          user.classList.add('offline')
+        }
+         presenceCont.appendChild(user)
+      } 
+    }else{
+      console.log('empty presence list sent to phandler')
+      presenceSocket.sendPresenceRequest()
     }
     console.log("Presences successfully updated")
   }

@@ -15,6 +15,7 @@ type ChatMessage struct {
 	Type          messageType              `json:"type,omitempty"`
 	Timestamp     string                   `json:"timestamp,omitempty"`
 	Conversations []*database.Conversation `json:"conversations"`
+	Notification  bool                     `json:"notification,omitempty"`
 }
 
 func GetChats(w http.ResponseWriter, r *http.Request) {
@@ -30,6 +31,25 @@ func GetChats(w http.ResponseWriter, r *http.Request) {
 	if usersMatch {
 		w.Write(jsonChats)
 	}
+}
+
+func Notification(w http.ResponseWriter, r *http.Request) {
+	// adding or removing notification? 
+	var chat database.Chat
+	err := json.NewDecoder(r.Body).Decode(&chat)
+	if err != nil {
+		log.Println(err)
+	}
+	fmt.Println("Notification change")
+	if chat.Notification {
+		fmt.Println("adding Notification")
+		CreateNotification(chat.Reciever.ID, chat.Sender.ID)
+	} else {
+		fmt.Println("removing Notification")
+		RemoveNotification(chat.Reciever.ID, chat.Sender.ID)
+	}
+    data,_ := json.Marshal(chat)
+	w.Write(data)
 }
 
 func usersPartofConvo(user1, user2 string, newMessage bool) (bool, []byte) {
@@ -54,8 +74,38 @@ func usersPartofConvo(user1, user2 string, newMessage bool) (bool, []byte) {
 	}
 	return false, nil
 }
+func CreateNotification(user string, from string) {
+	stmt, err := database.DB.Prepare("INSERT INTO notifications (user, from) VALUES (?, ?,?);")
+	defer stmt.Close()
+	if err != nil {
+	  fmt.Printf("CreateNotification DB Prepare error: %+v\n", err)
+	}
+	
+	_, err = stmt.Exec(user, from)
+	if err != nil {
+		 fmt.Printf("CreateNotifictaion Exec error: %+v\n", err)
+
+	}
+	
+
+}
+func RemoveNotification(user string, from string) {
+	_, err := database.DB.Exec("DELETE FROM notifications WHERE user = ? AND from = ?", user, from )
+		if err != nil {
+			log.Println("Remove Notification Database Error:,", err)
+		}
+
+}
 
 func (m *ChatMessage) Handle(s *socket) error {
+	fmt.Println("is this a notification?", m.Notification)
+
+	if m.Notification {
+		//notification table: user from
+		//create new notification in table using sender and receiver participants 
+		// send response back to handler which addes notification symbol to the senders name 
+	}
+
 	fmt.Println("chat message func", m.Conversations, "type", m.Type)
 	fmt.Println("time after this", m.Timestamp, "chat")
 	var time = m.Timestamp
@@ -172,7 +222,3 @@ func CreateConversation(conversations *database.Conversation) (string, error) {
 	}
 	return conversations.ConvoID, err
 }
-
-
-
-

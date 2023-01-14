@@ -123,6 +123,16 @@ func InitialiseDB(path string, insertPlaceholders bool) {
 		fmt.Println("CHATS TABLE ERROR")
 		log.Fatal(errChats.Error())
 	}
+	_, errNotifs := sqliteDatabase.Exec(`
+		CREATE TABLE IF NOT EXISTS "notificationss" (
+			"user" TEXT,
+			"from"	TEXT
+			);
+	`)
+	if errNotifs != nil {
+		fmt.Println("NOTIFICATIONS TABLE ERROR")
+		log.Fatal(errChats.Error())
+	}
 	DB = sqliteDatabase
 }
 func insertPlaceholdersInDB() {

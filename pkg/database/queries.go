@@ -45,8 +45,10 @@ type Chat struct {
 	ConvoID string `json:"convo_id"`
 	ChatID  string `json:"chat_id"`
 	Sender  User   `json:"sender"`
+	Reciever User	`json:"reciever,omitempty"`
 	Date    string `json:"date,omitempty"`
 	Body    string `json:"body,omitempty"`
+	Notification bool `json:"notification,omitempty"`
 }
 type Presence struct {
 	ID                string `json:"id"`

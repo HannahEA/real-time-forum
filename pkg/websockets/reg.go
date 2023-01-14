@@ -142,7 +142,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(users)
 }
 
-// updates user table
+// updates database table
 func UpdateUser(nickname, loggedin string, id string) {
 	fmt.Println("Updaate user:", nickname, " loggedin:", loggedin)
 	stmt, err := database.DB.Prepare(`UPDATE "users" SET "loggedin" = ? WHERE "nickname" = ?`)
@@ -170,7 +170,7 @@ func UpdateUser(nickname, loggedin string, id string) {
 
 }
 
-// logout
+// *****************************LOGOUT***************************************
 type logoutDetails struct {
 	Username string `json:"username"`
 }
@@ -182,6 +182,15 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	loggedin := "false"
 	fmt.Println("Logging out", details.Username)
 	UpdateUser(details.Username, loggedin, "")
+
+	var user = &PresenceMessage{
+		Username: details.Username,
+		Login:    "false",
+	}
+	if err := user.Handle(); err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	//close websocket connection
 	BrowserSockets[details.Username][0].Close()

@@ -66,10 +66,7 @@ func SocketCreate(w http.ResponseWriter, r *http.Request) {
 	case "/presence":
 		ptrSocket.t = presence
 		// loads the presence list on window load
-		var user = &PresenceMessage{
-			Username: User1.Nickname,
-		}
-		if err := user.Handle(); err != nil {
+		if err := OnPresenceConnect(ptrSocket); err != nil {
 			fmt.Println(err)
 			return
 		}

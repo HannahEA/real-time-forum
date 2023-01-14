@@ -48,6 +48,7 @@ func main() {
 	myhttp.HandleFunc("/login", socket.Login)
 	myhttp.HandleFunc("/logout", socket.Logout)
 	myhttp.HandleFunc("/getChats", socket.GetChats)
+	myhttp.HandleFunc("/notification", socket.Notification)
 	// myhttp.HandleFunc("/home", mainHandler)
 	fmt.Println("http://localhost:8080")
 	err := http.ListenAndServe(":8080", myhttp)

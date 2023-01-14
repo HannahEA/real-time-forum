@@ -13,6 +13,7 @@ type PresenceMessage struct {
 	Type      messageType         `json:"type"`
 	Timestamp string              `json:"timestamp,omitempty"`
 	Username  string              `json:"username,omitempty"`
+	Login     string              `json:"Login,omitempty"`
 	Presences []database.Presence `json:"presences,omitempty"`
 }
 
@@ -53,6 +54,7 @@ func changePresList(pres []database.Presence, username string, conn *websocket.C
 func (m *PresenceMessage) Handle() error {
 	//get username of user logged in on this browser
 	var username string
+	var login bool
 	if m != nil {
 		fmt.Println("Presence Username", m.Username)
 		username = m.Username
@@ -64,23 +66,30 @@ func (m *PresenceMessage) Handle() error {
 	}
 	fmt.Println("OnPresenceConnect: get presences successful", presences)
 
-	// send presences update to all browsers
 	var broadErr error
-	// var oldBrow string
-	// var newBrow string
-	var newUser = make([]*websocket.Conn, 0)
-	newUser = append(newUser, SavedSockets[len(SavedSockets)-2:]...)
-	BrowserSockets[username] = newUser
-	fmt.Println("Browser Sockets", BrowserSockets)
+	fmt.Println("username", username, "sockets", BrowserSockets[username])
+	if m.Login == "false" {
+		//loggin out
+		login = false
+	} else {
+		//login or browser refresh
+		var newUser = make([]*websocket.Conn, 0)
+		newUser = append(newUser, SavedSockets[len(SavedSockets)-2:]...)
+		BrowserSockets[username] = newUser
+		fmt.Println("Browser Sockets", BrowserSockets)
+		login = true
+	}
+
 	for name, brow := range BrowserSockets {
 		fmt.Println("Browser", name, brow)
-		if name == username {
-			for i, conn := range brow {
-				if i == 1 {
-					fmt.Println("updating presences in current browser...")
 
-					//for browser that users has logged in to, remove logged in user from user list before broadcasting
-					finalM := changePresList(presences, username, conn)
+		for i, conn := range brow {
+			if i == 1 {
+				if (name == username && login) || name != username {
+					fmt.Println("updating presences...")
+
+					//for browser that users have logged in to, remove logged in user from user list before broadcasting
+					finalM := changePresList(presences, name, conn)
 					broadErr = finalM.Broadcast(conn)
 					if broadErr != nil {
 						return broadErr
@@ -89,55 +98,11 @@ func (m *PresenceMessage) Handle() error {
 				}
 
 			}
-			// broswer where a user is logging in
-
-		} else {
-
-			for i, conn := range brow {
-				if i == 1 {
-					finalM := changePresList(presences, name, conn)
-					fmt.Println("message sent to other browsers", finalM)
-					broadErr = finalM.Broadcast(conn)
-					if broadErr != nil {
-						return broadErr
-					}
-					fmt.Println("presences in other browsers updated")
-				}
-
-			}
 
 		}
-		// on logout send empty presence list to js to print
 
-		// for i, conn := range brow {
-		// 	fmt.Println("Connection", &conn)
-		// 	//if connection is logged in but not the one where the user is making a change send all presences
-		// 	if i == 3 && conn != user && ([]rune(k))[0] <= 122 && ([]rune(k))[0] >= 65 {
-
-		// 	} else if i == 3 && conn == user && ([]rune(k))[0] >= 48 && ([]rune(k))[0] <= 57 {
-
-		// 	} else if conn == user && k == username {
-		// 		// browser where the user is logging out
-		// 		oldBrow = k
-		// 		newBrow = uuid.NewV4().String()
-		// 		//logged out so empty presence list sent
-		// 		c2 := &PresenceMessage{Type: presence,
-		// 			Timestamp: ""}
-		// 		users := make([]database.Presence, 0)
-		// 		c2.Presences = users
-		// 		broadErr = c2.Broadcast(conn)
-		// 		if broadErr != nil {
-		// 			return broadErr
-		// 		}
-		// 	}
-
-		// }
 	}
-	//change name of browser websocket concections in the map to the username of the logged in user
 
-	// BrowserSockets[newBrow] = BrowserSockets[oldBrow]
-	// delete(BrowserSockets, oldBrow)
-	// fmt.Println("Browser sockets name updated..", BrowserSockets)
 	return broadErr
 }
 

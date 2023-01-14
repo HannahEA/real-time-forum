@@ -68,8 +68,8 @@
             document.getElementById("postButton").style.display="block"
             document.getElementById("postButton").style.margin="0 auto"
             
-            var  chatSocket = new MySocket
-            var presenceSocket = new MySocket
+            var  chatSocket = new MySocket()
+            var presenceSocket = new MySocket()
             chatSocket.connectSocket("chat", chatSocket.chatHandler)
             presenceSocket.connectSocket("presence", presenceSocket.presenceHandler);
         } else {
