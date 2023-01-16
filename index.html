@@ -55,11 +55,8 @@
         let contentSocket = new MySocket()
         contentSocket.connectSocket("content", contentSocket.contentHandler);
         let postSocket = new MySocket()
-        postSocket.connectSocket("post", postSocket.postHandler);
-        let chatSocket = new MySocket()
-        chatSocket.connectSocket("chat", chatSocket.chatHandler);
-        let presenceSocket = new MySocket()
-        presenceSocket.connectSocket("presence", presenceSocket.presenceHandler);
+            postSocket.connectSocket("post", postSocket.postHandler);
+
         console.log("Cookies Present:..", document.cookie) 
         if (document.cookie != "") {
             let username = (document.cookie).split("=")[0]
@@ -70,6 +67,11 @@
             document.getElementById("postLogin").style.display="none"
             document.getElementById("postButton").style.display="block"
             document.getElementById("postButton").style.margin="0 auto"
+            
+            var  chatSocket = new MySocket()
+            var presenceSocket = new MySocket()
+            chatSocket.connectSocket("chat", chatSocket.chatHandler)
+            presenceSocket.connectSocket("presence", presenceSocket.presenceHandler);
         } else {
             document.getElementById("login").style.display = "block"
             document.getElementById("logout").style.display="none"

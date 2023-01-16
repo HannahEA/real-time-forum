@@ -1,15 +1,19 @@
 package websockets
+
 import (
 	"fmt"
 	"real-time-forum/pkg/database"
 	"time"
+
 	uuid "github.com/satori/go.uuid"
 )
+
 type PostMessage struct {
 	Type      messageType      `json:"type,omitempty"`
 	Timestamp string           `json:"timestamp,omitempty"`
 	Posts     []*database.Post `json:"posts"`
 }
+
 func (m PostMessage) Handle(s *socket) error {
 	if len(m.Posts) == 0 {
 		p, err := database.GetPopulatedPosts()
@@ -53,6 +57,7 @@ func (m *PostMessage) Broadcast(s *socket) error {
 	}
 	return nil
 }
+
 // TODO: add timestamp in the PostMessage struct; c
 func OnPostsConnect(s *socket) error {
 	time.Sleep(1 * time.Second)
@@ -105,19 +110,18 @@ func CreateComment(comment database.Comment) (database.Comment, error) {
 	}
 	return comment, err
 }
-func CreateUser (user database.User) (database.User, error){
+func CreateUser(user database.User) (database.User, error) {
 	stmt, err := database.DB.Prepare("INSERT INTO users (ID, nickname, age, gender, firstname, lastname, email, password, loggedin) VALUES (?,?,?,?,?,?,?,?,?)")
 	defer stmt.Close()
-	if err !=nil {
+	if err != nil {
 		return user, fmt.Errorf("Create User DB Prepare error: %+v\n", err)
 	}
-	if user.ID == ""{
+	if user.ID == "" {
 		user.ID = uuid.NewV4().String()
 	}
-	_,err = stmt.Exec(user.ID, user.Nickname, user.Age, user.Gender, user.FirstName, user.LastName, user.Email, user.Password, user.LoggedIn)
+	_, err = stmt.Exec(user.ID, user.Nickname, user.Age, user.Gender, user.FirstName, user.LastName, user.Email, user.Password, user.LoggedIn)
 	if err != nil {
 		return user, fmt.Errorf("Create User Exec error: %+v\n", err)
 	}
-	return user,err
+	return user, err
 }
-

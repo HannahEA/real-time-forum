@@ -11,6 +11,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var User1 database.User
+
 // ***************************REGISTER**********************************************************8
 // check if pasword meets criteria number length etc, if nickname is not taken
 func Register(w http.ResponseWriter, r *http.Request) {
@@ -21,6 +23,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
+
 	// User Exists message
 	type Exist struct {
 		Nickname string
@@ -126,6 +129,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	// checks len again to stop panic err && updates user logged in to true in DB and creates cookie
 	if len(users) > 0 && users[0].LoggedIn == "true" {
+		User1.Nickname = user.Nickname
 		loggedin := "true"
 
 		cookieValue := uuid.NewV4()
@@ -138,7 +142,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(users)
 }
 
-// updates user table
+// updates database table
 func UpdateUser(nickname, loggedin string, id string) {
 	fmt.Println("Updaate user:", nickname, " loggedin:", loggedin)
 	stmt, err := database.DB.Prepare(`UPDATE "users" SET "loggedin" = ? WHERE "nickname" = ?`)
@@ -166,7 +170,7 @@ func UpdateUser(nickname, loggedin string, id string) {
 
 }
 
-// logout
+// *****************************LOGOUT***************************************
 type logoutDetails struct {
 	Username string `json:"username"`
 }
@@ -178,6 +182,22 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	loggedin := "false"
 	fmt.Println("Logging out", details.Username)
 	UpdateUser(details.Username, loggedin, "")
+
+	var user = &PresenceMessage{
+		Username: details.Username,
+		Login:    "false",
+	}
+	if err := user.Handle(); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	//close websocket connection
+	BrowserSockets[details.Username][0].Close()
+	BrowserSockets[details.Username][1].Close()
+	// delete logged out user from map
+	delete(BrowserSockets, details.Username)
+	fmt.Println("Browser sockets name updated..", BrowserSockets)
 
 	c1, err := r.Cookie(details.Username)
 	fmt.Println("Cookie---", c1)
