@@ -126,7 +126,7 @@ func InitialiseDB(path string, insertPlaceholders bool) {
 	_, errNotifs := sqliteDatabase.Exec(`
 		CREATE TABLE IF NOT EXISTS "notificationss" (
 			"user" TEXT,
-			"from"	TEXT
+			"user2"	TEXT
 			);
 	`)
 	if errNotifs != nil {

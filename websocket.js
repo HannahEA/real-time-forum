@@ -110,18 +110,18 @@ class MySocket {
   }
 
   chatHandler(text) {
-    
    console.log("printing chats..")
    console.log("type of chat message", typeof text)
+   let chatBox = document.getElementById("newchatscontainer")
     if (typeof text == "string") {
       //new message
       // is the chat box open?
-      let chatBox = document.getElementById("newchatscontainer")
-      console.log("chatBox", chatBox)
-      if (typeof chatBox != "undefined") {
-         // Yes =
-      console.log("new chat message", text)
+       
       let x = JSON.parse(text)
+      console.log("chatBox", chatBox)
+      if (chatBox != null) {
+         // Yes =
+        console.log("new chat message", text)
         let chat = document.createElement("div");
         chat.className = "submittedchat"
         chat.id = x.chat_id
@@ -130,45 +130,43 @@ class MySocket {
       } else {
         //No = send POST fetch with message containing sender and reciever
         x.notification = true
-        x.reciever = {id:`${getCookieName()}`}
+        x.reciever.id = `${getCookieName()}`
+        console.log("notifictaion message", x)
         var stringified = JSON.stringify(x)
-        fetch("/notification",{
-         headers:{
-           'Accept':'application/json',
-           'Content-Type': 'application/json'
-         },
-         method: "POST",
-         body: stringified
-       })
-       .then(response => response.json())
-       .then((data)=>{
-         //when confirmation is reciever add class to presence button that adds notification symbol
-         let chat = JSON.parse(data)
-         let button = document.getElementbyClass(`${chat.sender}`)
-         button.style.backgroundColor = "purple"
-       })
+        Notifications(stringified)
       }  
      } else{
-      // delete other chat when opening a new one 
-    //   let chats = document.getElementsByClassName("submittedchat").length > 0
-    // if (chats.length > 0) {
-    //   for(let c of chats) {
-    //     console.log("removing chat")
-    //     c.remove()
-    //   }
-    // }
       //full chat histry
-      for (let c of text.conversations) {
-        
-        for (let p of c.chats) {
+      let position 
+      console.log(text)
+      let chats = text.conversations[0].chats
+      let chatL = text.conversations[0].chats.length-1
+      for ( position = chatL ; position>= chatL - 9; position--) {
+         let p = chats[position]
           let chat = document.createElement("div");
           chat.className = "submittedchat"
           chat.id = p.chat_id
           chat.innerHTML = "<b>Me: " + p.sender.id + "</b>" + "<br>" + "<b>Date: " + "</b>" + p.date + "<br>" + p.body + "<br>";
-          document.getElementById("newchatscontainer").appendChild(chat)
-        }
-        
+          document.getElementById("newchatscontainer").prepend(chat)
       }
+      position--
+      chatBox.addEventListener('scroll', (event)=>{
+        console.log("y position", chatBox.scrollTop) 
+        if (chatBox.scrollTop == 0) {
+            for (let i = 0; i<=9;i++ ) { 
+              if (position == 0) {
+                break
+              }
+              let p = chats[position]
+              let chat = document.createElement("div");
+              chat.className = "submittedchat"
+              chat.id = p.chat_id
+              chat.innerHTML = "<b>Me: " + p.sender.id + "</b>" + "<br>" + "<b>Date: " + "</b>" + p.date + "<br>" + p.body + "<br>";
+              document.getElementById("newchatscontainer").prepend(chat)
+              position--
+          
+          }
+      }})
      }
     
   }
@@ -194,17 +192,28 @@ class MySocket {
         user.addEventListener('click', function ( ) {
           reciev_id = p.nickname
           sender_id = `${getCookieName()}`
+          contentSocket.sendChatContentRequest()
+          chatSocket.getAllChats(reciev_id) 
           // check for notifictaion symbol on button if present remove class before requesting all chats 
-          if (document.getElementById(`${p.id}`).style.backgroundColor="purple" ){
+          if (document.getElementById(`${p.id}`).style.backgroundColor === "purple" ){
             if (user.classList.contains('offline')){
              user.style.backgroundColor = 'red'
             } else {
              user.style.backgroundColor = 'black'
             }
+            let m = {
+              reciever: {
+                id: reciev_id,
+              },
+              sender: {
+                id: sender_id,
+              },
+              notification: false
+            }
+            let stringified = JSON.stringify(m)
+            Notifications(stringified)
+            console.log("notification removed")
           }
-          // Notifications()
-          contentSocket.sendChatContentRequest()
-          chatSocket.getAllChats(reciev_id)
         });
        
         user.id = p.id
@@ -267,7 +276,7 @@ class MySocket {
               comments: [
                 {
                   post_id: child.id,
-                  nickname: uName,
+                  nickname: `${getCookieName()}`,
                   body: document.getElementById('commentbody').value,
                 }
               ]
@@ -287,7 +296,7 @@ class MySocket {
       posts: [
         {
           //nickname: e.target.nickname,
-          nickname: uName,
+          nickname: `${getCookieName()}`,
           title: document.getElementById('posttitle').value,
           categories: document.getElementById('category').value,
           body: document.getElementById('postbody').value,
@@ -581,4 +590,26 @@ function loadContent(type, postID){
     const c = JSON.parse(data)
     document.getElementById("content").innerHTML = c.body
   }).catch(error => console.log(error))
+}
+
+function Notifications(message) {
+  fetch("/notification",{
+    headers:{
+      'Accept':'application/json',
+      'Content-Type': 'application/json'
+    },
+    method: "POST",
+    body: message
+  })
+  .then(response => response.json())
+  .then((data)=>{
+    //when confirmation is reciever add class to presence button that adds notification symbol 
+    // let chat = JSON.parse(data)
+    console.log(data.notification == true)
+    if (data.notification == true){
+      let button = document.querySelector(`.${data.sender.id}`)
+      button.style.backgroundColor = "purple"
+      console.log("notification added")
+    }
+  })
 }

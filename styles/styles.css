@@ -117,8 +117,8 @@ section .chatcontainer {
     align-items: center;
     flex-direction: column;
 }
-section{
-    overflow: scroll;
-}
+/* section{
+     overflow: scroll; 
+}*/
 
 

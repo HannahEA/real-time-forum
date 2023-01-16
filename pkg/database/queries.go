@@ -42,26 +42,26 @@ type Conversation struct {
 	Chats        []Chat `json:"chats"`
 }
 type Chat struct {
-	ConvoID string `json:"convo_id"`
-	ChatID  string `json:"chat_id"`
-	Sender  User   `json:"sender"`
-	Reciever User	`json:"reciever,omitempty"`
-	Date    string `json:"date,omitempty"`
-	Body    string `json:"body,omitempty"`
-	Notification bool `json:"notification,omitempty"`
+	ConvoID      string `json:"convo_id"`
+	ChatID       string `json:"chat_id"`
+	Sender       User   `json:"sender"`
+	Reciever     User   `json:"reciever,omitempty"`
+	Date         string `json:"date,omitempty"`
+	Body         string `json:"body,omitempty"`
+	Notification bool   `json:"notification,omitempty"`
 }
 type Presence struct {
 	ID                string `json:"id"`
 	Nickname          string `json:"nickname"`
 	Online            string `json:"online"`
 	LastContactedTime string `json:"last_contacted_time"`
+	Notification      string `json:"notifictation,omitempty"`
 }
 
 type Login struct {
 	Nickname string `json:"nickname,omitempty"`
 	Password string `json:"password,omitempty"`
 }
-
 
 func GetUsers() ([]User, error) {
 	users := []User{}
@@ -227,7 +227,6 @@ func populateUsersForChats(chats []Chat) ([]Chat, error) {
 	}
 	return outChats, nil
 }
-
 
 func GetChat(convoID string) ([]Chat, error) {
 	chats := []Chat{}

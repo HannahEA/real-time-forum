@@ -55,6 +55,7 @@ func (m *PresenceMessage) Handle() error {
 	//get username of user logged in on this browser
 	var username string
 	var login bool
+	var refresh bool
 	if m != nil {
 		fmt.Println("Presence Username", m.Username)
 		username = m.Username
@@ -69,10 +70,18 @@ func (m *PresenceMessage) Handle() error {
 	var broadErr error
 	fmt.Println("username", username, "sockets", BrowserSockets[username])
 	if m.Login == "false" {
+		fmt.Println("Browser Logout")
 		//loggin out
 		login = false
 	} else {
 		//login or browser refresh
+		if BrowserSockets[username] != nil {
+			fmt.Println("Browser refresh")
+			refresh = true
+		} else {
+			fmt.Println("Browser Login")
+			refresh = false
+		}
 		var newUser = make([]*websocket.Conn, 0)
 		newUser = append(newUser, SavedSockets[len(SavedSockets)-2:]...)
 		BrowserSockets[username] = newUser
@@ -87,9 +96,11 @@ func (m *PresenceMessage) Handle() error {
 			if i == 1 {
 				if (name == username && login) || name != username {
 					fmt.Println("updating presences...")
-
 					//for browser that users have logged in to, remove logged in user from user list before broadcasting
 					finalM := changePresList(presences, name, conn)
+					if !refresh {
+						finalM.Presences = checkNotifications(username, finalM.Presences)
+					}
 					broadErr = finalM.Broadcast(conn)
 					if broadErr != nil {
 						return broadErr
@@ -137,6 +148,37 @@ func OnPresenceConnect(s *socket) error {
 		Presences: presences,
 	}
 	return c.Broadcast(s.con)
+}
+
+func checkNotifications(username string, presences []database.Presence) []database.Presence {
+	var Users []string
+	rows, err := database.DB.Query(`SELECT * FROM notificationss`)
+	if err != nil {
+		fmt.Printf("checkNotifictaions db.query error: %+v\n", err)
+	}
+	var user string
+	var user2 string
+	for rows.Next() {
+		err := rows.Scan(&user, &user2)
+		if err != nil {
+			fmt.Printf("checkNotifictaions rows.Scan error: %+v\n", err)
+		}
+		if user == username {
+			Users = append(Users, user2)
+		}
+	}
+	fmt.Println("presence with notifictaion", Users)
+	for _, pres := range presences {
+		for _, user := range Users {
+			if pres.Nickname == user {
+				pres.Notification = "true"
+			}
+		}
+	}
+	fmt.Println("New presences", presences)
+
+	return presences
+
 }
 
 // func (data *Forum) GetSessions() ([]Session, error) {

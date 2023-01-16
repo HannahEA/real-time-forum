@@ -15,7 +15,6 @@ type ChatMessage struct {
 	Type          messageType              `json:"type,omitempty"`
 	Timestamp     string                   `json:"timestamp,omitempty"`
 	Conversations []*database.Conversation `json:"conversations"`
-	Notification  bool                     `json:"notification,omitempty"`
 }
 
 func GetChats(w http.ResponseWriter, r *http.Request) {
@@ -34,7 +33,7 @@ func GetChats(w http.ResponseWriter, r *http.Request) {
 }
 
 func Notification(w http.ResponseWriter, r *http.Request) {
-	// adding or removing notification? 
+	// adding or removing notification?
 	var chat database.Chat
 	err := json.NewDecoder(r.Body).Decode(&chat)
 	if err != nil {
@@ -42,13 +41,13 @@ func Notification(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("Notification change")
 	if chat.Notification {
-		fmt.Println("adding Notification")
-		CreateNotification(chat.Reciever.ID, chat.Sender.ID)
+		fmt.Println("adding Notification", chat.Sender.ID, chat.Reciever.ID)
+		CreateNotification(chat.Sender.ID, chat.Reciever.ID)
 	} else {
 		fmt.Println("removing Notification")
-		RemoveNotification(chat.Reciever.ID, chat.Sender.ID)
+		RemoveNotification(chat.Sender.ID, chat.Reciever.ID)
 	}
-    data,_ := json.Marshal(chat)
+	data, _ := json.Marshal(chat)
 	w.Write(data)
 }
 
@@ -75,36 +74,28 @@ func usersPartofConvo(user1, user2 string, newMessage bool) (bool, []byte) {
 	return false, nil
 }
 func CreateNotification(user string, from string) {
-	stmt, err := database.DB.Prepare("INSERT INTO notifications (user, from) VALUES (?, ?,?);")
+	stmt, err := database.DB.Prepare("INSERT INTO notificationss (user, user2) VALUES (?, ?);")
 	defer stmt.Close()
 	if err != nil {
-	  fmt.Printf("CreateNotification DB Prepare error: %+v\n", err)
+		fmt.Printf("CreateNotification DB Prepare error: %+v\n", err)
 	}
-	
+
 	_, err = stmt.Exec(user, from)
 	if err != nil {
-		 fmt.Printf("CreateNotifictaion Exec error: %+v\n", err)
+		fmt.Printf("CreateNotifictaion Exec error: %+v\n", err)
 
 	}
-	
 
 }
 func RemoveNotification(user string, from string) {
-	_, err := database.DB.Exec("DELETE FROM notifications WHERE user = ? AND from = ?", user, from )
-		if err != nil {
-			log.Println("Remove Notification Database Error:,", err)
-		}
+	_, err := database.DB.Exec("DELETE FROM notificationss WHERE user = ? AND user2 = ?", user, from)
+	if err != nil {
+		log.Println("Remove Notification Database Error:,", err)
+	}
 
 }
 
 func (m *ChatMessage) Handle(s *socket) error {
-	fmt.Println("is this a notification?", m.Notification)
-
-	if m.Notification {
-		//notification table: user from
-		//create new notification in table using sender and receiver participants 
-		// send response back to handler which addes notification symbol to the senders name 
-	}
 
 	fmt.Println("chat message func", m.Conversations, "type", m.Type)
 	fmt.Println("time after this", m.Timestamp, "chat")
@@ -158,13 +149,19 @@ func (m *ChatMessage) Handle(s *socket) error {
 		fmt.Print("Chat Handler: unable to broadcast new message to sender")
 		return err2
 	}
-	fmt.Println("Chat Handler: broadcast new message to sender")
-	err3 := Broadcast(BrowserSockets[reciever][0], newChat)
-	if err3 != nil {
-		fmt.Print("Chat Handler: unable to broadcast new message to reciever", reciever)
-		return err3
+	fmt.Println("Chat Handler: broadcast new messa ge to sender")
+	if BrowserSockets[reciever] == nil {
+		// notification when receiver is logged out 
+		CreateNotification(m.Conversations[0].Participants[1].ID, m.Conversations[0].Participants[0].ID)
+	} else {
+		err3 := Broadcast(BrowserSockets[reciever][0], newChat)
+		if err3 != nil {
+			fmt.Print("Chat Handler: unable to broadcast new message to reciever", reciever)
+			return err3
+		}
+		fmt.Println("Chat Handler: broadcast new message to reciever", reciever)
 	}
-	fmt.Println("Chat Handler: broadcast new message to reciever", reciever)
+	
 	return nil
 }
 
@@ -187,11 +184,7 @@ func CreateChat(chat database.Chat) (string, error) {
 	if chat.ChatID == "" {
 		chat.ChatID = uuid.NewV4().String()
 	}
-	// TODO: remove placeholder nickname once login/sessions are working
-	if chat.Sender.ID == "" {
-		//this is foo's userID in the database
-		chat.Sender.ID = "6d01e668-2642-4e55-af73-46f057b731f9"
-	}
+
 	_, err = stmt.Exec(chat.ConvoID, chat.ChatID, chat.Sender.ID, chat.Date, chat.Body)
 	if err != nil {
 		return "", fmt.Errorf("CreateChat Exec error: %+v\n", err)

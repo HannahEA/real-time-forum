@@ -1,5 +1,5 @@
 <div id="chatcontainer">
-    <div id="newchatscontainer">  
+    <div id="newchatscontainer" >  
     </div>
 
     <br>
@@ -35,6 +35,11 @@
             margin-top: 10px;
             border: 2px solid rgb(255, 255, 255);
             justify-self: right;
+            
+        }
+        #newchatscontainer {
+            max-height: 500px;
+            overflow: scroll;
         }
     </style>
 
