@@ -45,7 +45,7 @@ func Notification(w http.ResponseWriter, r *http.Request) {
 		CreateNotification(chat.Sender.ID, chat.Reciever.ID)
 	} else {
 		fmt.Println("removing Notification")
-		RemoveNotification(chat.Sender.ID, chat.Reciever.ID)
+		RemoveNotification(chat.Reciever.ID, chat.Sender.ID)
 	}
 	data, _ := json.Marshal(chat)
 	w.Write(data)
@@ -151,8 +151,9 @@ func (m *ChatMessage) Handle(s *socket) error {
 	}
 	fmt.Println("Chat Handler: broadcast new messa ge to sender")
 	if BrowserSockets[reciever] == nil {
-		// notification when receiver is logged out 
-		CreateNotification(m.Conversations[0].Participants[1].ID, m.Conversations[0].Participants[0].ID)
+		fmt.Println("Broser Socket", reciever, BrowserSockets[reciever])
+		// notification when receiver is logged out sender reciever
+		CreateNotification(m.Conversations[0].Participants[0].ID, m.Conversations[0].Participants[1].ID)
 	} else {
 		err3 := Broadcast(BrowserSockets[reciever][0], newChat)
 		if err3 != nil {
@@ -161,7 +162,7 @@ func (m *ChatMessage) Handle(s *socket) error {
 		}
 		fmt.Println("Chat Handler: broadcast new message to reciever", reciever)
 	}
-	
+
 	return nil
 }
 

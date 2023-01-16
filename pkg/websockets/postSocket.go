@@ -119,7 +119,13 @@ func CreateUser(user database.User) (database.User, error) {
 	if user.ID == "" {
 		user.ID = uuid.NewV4().String()
 	}
-	_, err = stmt.Exec(user.ID, user.Nickname, user.Age, user.Gender, user.FirstName, user.LastName, user.Email, user.Password, user.LoggedIn)
+	var log string
+	if user.LoggedIn {
+		log = "true"
+	} else {
+		log = "false"
+	}
+	_, err = stmt.Exec(user.ID, user.Nickname, user.Age, user.Gender, user.FirstName, user.LastName, user.Email, user.Password, log)
 	if err != nil {
 		return user, fmt.Errorf("Create User Exec error: %+v\n", err)
 	}
