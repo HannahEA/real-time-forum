@@ -114,7 +114,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 				users = append(users, database.User{
 					Nickname: nickname,
 					Password: password,
-					LoggedIn: "true",
+					LoggedIn: true,
 				})
 			}
 
@@ -128,7 +128,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(users)
 
 	// checks len again to stop panic err && updates user logged in to true in DB and creates cookie
-	if len(users) > 0 && users[0].LoggedIn == "true" {
+	if len(users) > 0 && users[0].LoggedIn {
 		User1.Nickname = user.Nickname
 		loggedin := "true"
 

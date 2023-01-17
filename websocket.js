@@ -138,7 +138,6 @@ class MySocket {
      } else{
       //full chat histry
       let position 
-      console.log(text)
       let chats = text.conversations[0].chats
       let chatL = text.conversations[0].chats.length-1
       for ( position = chatL ; position>= chatL - 9; position--) {
@@ -184,6 +183,7 @@ class MySocket {
       presenceCont.removeChild(presenceCont.lastChild);
       }
     }
+    // console.log(m.sort((a, b) => (!b.online) ? 1 : (!a.online) ? ((a.nickname > b.nickname) ? 1 : -1) : -1 ))
     if (m.presences != null ) {
       //for each user
       for (let p of m.presences) {
@@ -220,8 +220,11 @@ class MySocket {
         user.innerHTML = p.nickname
         user.style.color = 'white'
         console.log(p.online, p.nickname)
-        user.className = "presence " + p.nickname  
-        if (p.online === "false") {
+        user.className = "presence " + p.nickname
+        console.log("p.notification", p.notification)
+        if (p.notification == true) {
+          user.style.backgroundColor = "purple"
+        } else if (p.online === false) {
          user.style.backgroundColor = "red"
           user.classList.add('offline')
         }
@@ -385,7 +388,7 @@ let registerForm = {
   lName: "",
   email: "",
   password: "",
-  loggedin: "false",
+  loggedin: false,
 }
 
 let loginForm ={
