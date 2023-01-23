@@ -6,9 +6,10 @@
     <title>Real Time Forum</title>
 </head>
 <body>
+    <!-- contentSocket.sendContentRequest(event); -->
     <header>01 Founders
         <button id="post"
-            onclick="contentSocket.sendContentRequest(event); postSocket.sendSubmittedPostsRequest()">Home</button>
+            onclick=" postSocket.sendSubmittedPostsRequest()">Home</button>
         <button id="login" onclick="contentSocket.sendContentRequest(event)">Login/Register</button>
         <button id="logout" onclick="Logout() ">Logout</button>
         <button id="profile" onclick="contentSocket.sendContentRequest(event)">Profile</button>
