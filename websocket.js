@@ -48,6 +48,7 @@ class MySocket {
 
   getAllChats(reciev_id){
 
+   
     // console.log(reciev_id)
     let getCorrectChats ={
       user1: getCookieName(),
@@ -62,7 +63,8 @@ class MySocket {
       method: "POST",
       body: stringified
     })
-    .then(response => response.json())
+    .then(response => 
+      response.json())
     .then(data => chatSocket.text(data))
     .catch(error => console.log(error))
   }
@@ -118,13 +120,13 @@ class MySocket {
       let x = JSON.parse(text)
       console.log(x)
       //move presence to top when you get a chat for reciever
-      // if (x.sender.id != getCookieName()) {
-      //    let pMessage = {
-      //     date: x.date,
-      //     sender: x.sender.id,
-      //    } 
-      //    presenceSocket.presenceHandler(pMessage)
-      // }
+      if (x.sender.id == getCookieName()) {
+        //push this chat to the top for the sender
+        let pres = document.getElementById(reciev_id)
+        let newP = pres
+        pres.remove()
+        document.getElementById("presencecontainer").prepend(newP)
+      }
       // is the chat box open?
       
       console.log("chatBox", chatBox)
@@ -134,7 +136,8 @@ class MySocket {
         let chat = document.createElement("div");
         chat.className = "submittedchat"
         chat.id = x.chat_id
-        chat.innerHTML = "<b>Me: " + x.sender.id + "</b>" + "<br>" + "<b>Date: " + "</b>" + x.date + "<br>" + x.body + "<br>";
+        let date1 = new Date(x.date)
+        chat.innerHTML = "<b>Me: " + x.sender.id + "</b>" + "<br>" + "<b>Date: " + "</b>" + reformatTime(date1) + "<br>" + x.body + "<br>";
         document.getElementById("newchatscontainer").appendChild(chat)
       } else {
         //No = send POST fetch with message containing sender and reciever
@@ -146,6 +149,7 @@ class MySocket {
       }  
      } else{
       //full chat histry
+      
       let position 
       let chats = text.conversations[0].chats
       let chatL = text.conversations[0].chats.length-1
@@ -153,6 +157,7 @@ class MySocket {
 //let prevHeight =document.getElementById("newchatscontainer").scrollHeight
 
       for ( position = chatL ; position>= chatL - 9; position--) {
+        // console.log("position", position)
         if (position == -1) {
           break
         }
@@ -160,28 +165,33 @@ class MySocket {
           let chat = document.createElement("div");
           chat.className = "submittedchat"
           chat.id = p.chat_id
-          chat.innerHTML = "<b>Me: " + p.sender.id + "</b>" + "<br>" + "<b>Date: " + "</b>" + p.date + "<br>" + p.body + "<br>";
+          let date1 = new Date(p.date)
+          console.log("date", date1)
+          chat.innerHTML = "<b>Me: " + p.sender.id + "</b>" + "<br>" + "<b>Date: " + "</b>" + reformatTime(date1)+"<br>" + p.body + "<br>";
           document.getElementById("newchatscontainer").prepend(chat)
       }
-      chatBox.scrollTop = chatBox.scrollHeight;
+      // chatBox.scrollTop = chatBox.scrollHeight;
       position--
       chatBox.addEventListener('scroll', (event)=>{
-        console.log("y position", chatBox.scrollTop) 
+       
         if (chatBox.scrollTop == 0) {
             for (let i = 0; i<=9;i++ ) { 
+              console.log("position2", position)
               if (position == -1) {
+                console.log("position is -1")
                 break
               }
               let p = chats[position]
               let chat = document.createElement("div");
               chat.className = "submittedchat"
               chat.id = p.chat_id
-              chat.innerHTML = "<b>Me: " + p.sender.id + "</b>" + "<br>" + "<b>Date: " + "</b>" + p.date + "<br>" + p.body + "<br>";
+              let date1 = new Date(p.date)
+              chat.innerHTML = "<b>Me: " + p.sender.id + "</b>" + "<br>" + "<b>Date: " + "</b>" + reformatTime(date1) + "<br>" + p.body + "<br>";
               document.getElementById("newchatscontainer").prepend(chat)
               position--
           
           }
-          chatBox.scrollTop = chatBox.scrollHeight;
+          // chatBox.scrollTop = chatBox.scrollHeight;
           
           //get the current height of the chatbox 
           //let currentHeight = document.getElementById("newchatscontainer").scrollHeight
@@ -193,7 +203,17 @@ class MySocket {
   }
   contentHandler(text) {
     const c = JSON.parse(text)
+    console.log("content", c)
     document.getElementById("content").innerHTML = c.body;
+    if (c.resource == "chat") {
+      let titleBox = document.getElementById("chatTitle")
+      let title = document.createElement("h2")
+      title.innerHTML = reciev_id
+      title.style.color = "gray"
+     
+      titleBox.append(title)
+    }
+    
   }
   presenceHandler(text) {
    
@@ -312,22 +332,27 @@ class MySocket {
     let children = content.childNodes;
     console.log("content children", children)
     for (let c of children) {
-      // if (c.id != "submittedposts") {
+      if (c.id != "submittedposts") {
         console.log("child", c)
         // let child = document.getElementById(`${c.id}`)
         c.remove()
-      // }
+      }
     }
-    let post = document.createElement("div");
-    let button = document.createElement("button")
+    
+    
     if (m.posts.length != 0) {
-      let subPosts = document.createElement('div')
-    subPosts.id = "submittedposts"
-    content.appendChild(subPosts)
+      console.log("submitted posts?", document.getElementById("submittedposts"))
+      if (document.getElementById("submittedposts") == null) {
+        let subPosts = document.createElement('div')
+      subPosts.id = "submittedposts"
+      content.appendChild(subPosts)
+      }
+      
     
     for (let p of m.posts) {
       const consp = p
-      
+      let post = document.createElement("div");
+      let button = document.createElement("button")
       post.className = "submittedpost"
       post.id = p.post_id
       post.innerHTML = "<b>Title: " + p.title + "</b>" + "<br>" + "<b>Nickname: " + "</b>" + p.nickname + "<br>" + "<b>Category: " + p.categories + "</b>" + "<br>" + p.body + "<br>";
@@ -339,12 +364,12 @@ class MySocket {
         contentSocket.sendContentRequest(event, post.post_id)
       });
       post.appendChild(button)
-     
+     document.getElementById("submittedposts").appendChild(post)
     }
     }
     if ( document.getElementById("submittedposts") != null){
-      console.log("appending Postss")
-     document.getElementById("submittedposts").appendChild(post)
+      console.log("appended Posts")
+     
     } else {
       console.log("Submitted posts == null")
     }
@@ -378,20 +403,25 @@ class MySocket {
   }
   sendNewPostRequest(e) {
     console.log("sending new post request",uName)
-    let m = {
-      type: 'post',
-      timestamp: time(),
-      posts: [
-        {
-          //nickname: e.target.nickname,
-          nickname: `${getCookieName()}`,
-          title: document.getElementById('posttitle').value,
-          categories: document.getElementById('category').value,
-          body: document.getElementById('postbody').value,
-        }
-      ]
+    if (document.getElementById('posttitle').value != "" &&
+    document.getElementById('category').value != "" &&
+    document.getElementById('postbody').value != "") {
+      let m = {
+        type: 'post',
+        timestamp: time(),
+        posts: [
+          {
+            //nickname: e.target.nickname,
+            nickname: `${getCookieName()}`,
+            title: document.getElementById('posttitle').value,
+            categories: document.getElementById('category').value,
+            body: document.getElementById('postbody').value,
+          }
+        ]
+      }
+      this.mysocket.send(JSON.stringify(m));
     }
-    this.mysocket.send(JSON.stringify(m));
+    
     document.getElementById('posttitle').value = ""
     document.getElementById('category').value = ""
     document.getElementById('postbody').value = ""
@@ -508,7 +538,7 @@ function getRegDetails(){
     
 // SEND DATA TO BACKEND USING FETCH
   console.log(registerForm)
-    if(registerForm.nickname !=""&& registerForm.email !="" &&registerForm.password !="" ){
+    if(registerForm.nickname !=""&& checkEmail(registerForm.email) &&registerForm.password !="" ){
         
     fetch("/register",{
       headers:{
@@ -536,6 +566,9 @@ function getRegDetails(){
   }
 }
 
+function checkEmail(email) {
+  return email.includes("@")
+}
 
 // **********************************LOGIN*******************************************
 var presenceSocket = new MySocket
@@ -581,7 +614,7 @@ function loginFormData(event){
           alert("you are logged in ")
           document.getElementById("login").style.display = "none"
             document.getElementById("logout").style.display="block"
-            document.getElementById("profile").style.display="block"
+           
             document.getElementById("postLogin").style.display="none"
             document.getElementById("postButton").style.display="block"
             document.getElementById("postButton").style.margin="0 auto"
@@ -601,7 +634,7 @@ function loginFormData(event){
     // console.log("logindata",logindata, "hi")
     // console.log( Object.keys(logindata).length)
     // console.log(JSON.stringify(logindata))
-
+    postSocket.sendSubmittedPostsRequest()
   document.getElementById('login-form').reset()
 
  
@@ -634,7 +667,7 @@ body: logoutDataJSON
 }).then((response)=>{
   document.getElementById("login").style.display = "block"
   document.getElementById("logout").style.display="none"
-  document.getElementById("profile").style.display="none"
+
   document.getElementById("postLogin").style.display="block"
   document.getElementById("postButton").style.display="none"
 console.log("Logged out", response)
@@ -645,6 +678,7 @@ if (presenceCont.childElementCount != 0) {
 }
 }
 })
+postSocket.sendSubmittedPostsRequest()
 let user= document.getElementById('welcome')
 user.innerText = "Welcome"
 }
@@ -700,4 +734,17 @@ function Notifications(message) {
       console.log("notification added")
     }
   })
+}
+
+function reformatTime(date) {
+  let hoursN = date.getHours()
+  let minutesN = date.getMinutes() 
+  let minutes
+  if (minutesN<10) {
+    minutes = "0" + minutesN.toString()
+  } else {
+    minutes = minutesN.toString()
+  }
+  let time = hoursN.toString() + ":" + minutes
+  return time
 }

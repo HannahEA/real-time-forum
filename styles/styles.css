@@ -7,9 +7,7 @@
 #login {
     height: 25px;
 }
-#profile {
-    height: 25px;
-}
+
 #logout {
     height: 25px;
 }
@@ -133,13 +131,7 @@ section .chatcontainer {
     margin-right: 10px;
     border: 2px solid rgb(255, 255, 255);
 }
-.profile {
-    width: 377px;
-    height: 377px;
-    display: flex !important;
-    align-items: center;
-    flex-direction: column;
-}
+
 section{
      overflow: scroll; 
 }

@@ -100,7 +100,8 @@ func (m *ChatMessage) Handle(s *socket) error {
 
 	fmt.Println("chat message func", m.Conversations, "type", m.Type)
 	fmt.Println("time after this", m.Timestamp, "chat")
-	time := newTime.Now().String()
+	// time := newTime.Now().String()
+	time := m.Timestamp
 	fmt.Println("time in golang", time)
 	var convoCheckID string
 	var reciever string

@@ -44,7 +44,7 @@
   </label> 
   <br>
   <!-- <input type="button" value="submit"/> -->
-  <button onclick="getRegDetails()">Register</button>
+  <button type="submit" onclick="getRegDetails()">Register</button>
 </form>
 
     </html>

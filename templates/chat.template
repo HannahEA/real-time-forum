@@ -1,4 +1,7 @@
 <div id="chatcontainer">
+    <div id="chatTitle"> </div>
+    <br>
+
     <div id="newchatscontainer" >  
     </div>
 

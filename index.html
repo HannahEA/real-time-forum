@@ -11,8 +11,7 @@
         <button id="post"
             onclick=" postSocket.sendSubmittedPostsRequest()">Home</button>
         <button id="login" onclick="contentSocket.sendContentRequest(event)">Login/Register</button>
-        <button id="logout" onclick="Logout() ">Logout</button>
-        <button id="profile" onclick="contentSocket.sendContentRequest(event)">Profile</button>
+        <button id="logout" onclick="Logout()">Logout</button>
         <h5 id="welcome"></h5>
     </header>
     <div class="main-container">
@@ -23,16 +22,16 @@
                     <h3>SUBMIT A POST</h3>
                     <div class="titleField">
                         <input type="text" style="width: 200px; text-align: center" id="posttitle" name="title"
-                            placeholder="Enter your Title" required />
+                            placeholder="Enter your Title" required minlength="1" />
                     </div>
                     <div class="categoryField">
                         <input type="text" style="width: 200px; text-align: center" id="category" name="category"
-                            placeholder="Enter your Category" required />
+                            placeholder="Enter your Category" required minlength="1"/>
                     </div>
                      
                     <div class="postBodyField">
-                        <input type="text" style="width: 200px; height: 200px; text-align: center" id="postbody"
-                            name="postbody" placeholder="Enter your Post Body" required />
+                        <textarea type="text" style="width: 200px; height: 200px; text-align: center" id="postbody"
+                            name="postbody" placeholder="Enter your Post Body" required minlength="1" > </textarea>
                     </div>
                     <button id="postButton" style="margin-top: 10px; margin-bottom: 10px"
                         onclick="postSocket.sendNewPostRequest(event)">Submit</button>
@@ -68,7 +67,7 @@
             document.getElementById("welcome").textContent = `Welcome, ${username}`
             document.getElementById("login").style.display = "none"
             document.getElementById("logout").style.display="block"
-            document.getElementById("profile").style.display="block"
+           
             document.getElementById("postLogin").style.display="none"
             document.getElementById("postButton").style.display="block"
             document.getElementById("postButton").style.margin="0 auto"
@@ -80,7 +79,7 @@
         } else {
             document.getElementById("login").style.display = "block"
             document.getElementById("logout").style.display="none"
-            document.getElementById("profile").style.display="none"
+       
             document.getElementById("postLogin").style.display="block"
             document.getElementById("postButton").style.display="none"
         }
