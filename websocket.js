@@ -3,6 +3,9 @@ const time = () => { return new Date() };
 let uName = ""
 let sender_id
 let reciev_id 
+function isValid(date) {
+  return !isNaN(date.getTime())
+}
 class MySocket {
   wsType = ""
   constructor() {
@@ -243,7 +246,20 @@ class MySocket {
     // var date1 = new Date(onlineUser[i].last_contacted_time)
     // console.log( date1)
    
- onlineUser.sort(function(a,b) {return b.last_contacted_time-a.last_contacted_time})
+ onlineUser.sort(function(a,b) {
+  console.log(typeof a.last_contacted_time)
+  let aDate = new Date (a.last_contacted_time)
+  let bDate = new Date (b.last_contacted_time)
+  if (!isValid(aDate) && !isValid(bDate)) {
+    return 0
+  }
+  if (!isValid(aDate)){
+    return 1
+  }
+  if (!isValid(bDate)){
+    return -1
+  }
+  return bDate-aDate})
   console.log(onlineUser)
  //  console.log("pres in time order", m.presences )
     //remove old list     
@@ -748,3 +764,4 @@ function reformatTime(date) {
   let time = hoursN.toString() + ":" + minutes
   return time
 }
+
