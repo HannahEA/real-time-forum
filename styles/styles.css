@@ -67,13 +67,36 @@ section .submittedpost {
     border: 2px solid rgb(255, 255, 255);
 }
 aside .presence {
-    background-color: #000000;
+    background-color: #9c9494;
     padding: 10px;
     margin-bottom: 10px;
     border: 2px solid rgb(255, 255, 255);
     overflow-y: auto;
     display: block;
 }
+
+.offline .icon {
+    background: rgb(226, 15, 15);
+    width:10px;
+    height:10px;
+    border-radius: 50%;
+    position: absolute;
+    /* top: 1em;
+    left: 1em; */
+    z-index: 3;
+  }
+
+ .online .icon {
+    background: rgb(22, 226, 15);
+    width:10px;
+    height:10px;
+    border-radius: 50%;
+    position: absolute;
+    /* top: 1em;
+    left: 1em; */
+    z-index: 3;
+  }
+
 form {
     text-align: center;
     background-color: #000000;

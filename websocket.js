@@ -110,8 +110,8 @@ class MySocket {
   }
 
   chatHandler(text) {
-   console.log("printing chats..")
-   console.log("type of chat message", typeof text)
+   console.log("printing chats..", text)
+  //  console.log("type of chat message", typeof text)
    let chatBox = document.getElementById("newchatscontainer")
     if (typeof text == "string") {
       //new message
@@ -130,7 +130,7 @@ class MySocket {
       console.log("chatBox", chatBox)
       if (chatBox != null) {
          // Yes =
-        console.log("new chat message", text)
+        // console.log("new chat message", text)
         let chat = document.createElement("div");
         chat.className = "submittedchat"
         chat.id = x.chat_id
@@ -140,7 +140,7 @@ class MySocket {
         //No = send POST fetch with message containing sender and reciever
         x.notification = true
         x.reciever.id = `${getCookieName()}`
-        console.log("notifictaion message", x)
+        // console.log("notifictaion message", x)
         var stringified = JSON.stringify(x)
         Notifications(stringified)
       }  
@@ -149,6 +149,9 @@ class MySocket {
       let position 
       let chats = text.conversations[0].chats
       let chatL = text.conversations[0].chats.length-1
+      //Get the height of the chat bpox before loading next 10
+//let prevHeight =document.getElementById("newchatscontainer").scrollHeight
+
       for ( position = chatL ; position>= chatL - 9; position--) {
         if (position == 0) {
           break
@@ -160,6 +163,7 @@ class MySocket {
           chat.innerHTML = "<b>Me: " + p.sender.id + "</b>" + "<br>" + "<b>Date: " + "</b>" + p.date + "<br>" + p.body + "<br>";
           document.getElementById("newchatscontainer").prepend(chat)
       }
+      chatBox.scrollTop = chatBox.scrollHeight;
       position--
       chatBox.addEventListener('scroll', (event)=>{
         console.log("y position", chatBox.scrollTop) 
@@ -177,6 +181,12 @@ class MySocket {
               position--
           
           }
+          chatBox.scrollTop = chatBox.scrollHeight;
+          
+          //get the current height of the chatbox 
+          //let currentHeight = document.getElementById("newchatscontainer").scrollHeight
+          //Scroll from top by currentheight - previous height
+          //document.getElementById("newchatscontainer").scrollTo = currentHeight - prevHeight
       }})
      }
     
@@ -221,14 +231,16 @@ class MySocket {
           reciev_id = p.nickname
           sender_id = `${getCookieName()}`
           contentSocket.sendChatContentRequest()
-          chatSocket.getAllChats(reciev_id) 
+          chatSocket.getAllChats(reciev_id)
+          
           // check for notifictaion symbol on button if present remove class before requesting all chats 
-          if (document.getElementById(`${p.id}`).style.backgroundColor === "purple" ){
-            if (user.classList.contains('offline')){
-             user.style.backgroundColor = 'red'
-            } else {
-             user.style.backgroundColor = 'black'
-            }
+          if (document.getElementById(p.nickname).style.backgroundColor === "purple" ){
+            user.style.backgroundColor = "#9c9494"
+            // if (user.classList.contains('offline')){
+            //  user.style.backgroundColor = 'red'
+            // } else {
+            //  user.style.backgroundColor = 'black'
+            // }
             let m = {
               reciever: {
                 id: reciev_id,
@@ -250,13 +262,26 @@ class MySocket {
         console.log(p.online, p.nickname)
         user.className = "presence " + p.nickname
         console.log("p.notification", p.notification)
+
         if (p.notification == true) {
           user.style.backgroundColor = "purple"
-        } else if (p.online === false) {
-         user.style.backgroundColor = "red"
-          user.classList.add('offline')
         }
-         presenceCont.appendChild(user)
+        
+        if (p.online === false) {
+        //  user.style.backgroundColor = "red"
+          user.classList.add('offline')
+          user.innerHTML += `<div class="icon">
+            <i class="material-icons" style="color:red"></i>
+            </div>`
+        } else {
+              user.classList.add('online')
+              user.innerHTML += `<div class="icon">
+                <i class="material-icons" style="color:white"></i>
+                </div>`
+        }
+
+        presenceCont.appendChild(user)
+
       } 
     }else{
       console.log('empty presence list sent to phandler')
