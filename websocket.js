@@ -118,13 +118,13 @@ class MySocket {
       let x = JSON.parse(text)
       console.log(x)
       //move presence to top when you get a chat for reciever
-      if (x.sender.id != getCookieName()) {
-         let pMessage = {
-          date: x.date,
-          sender: x.sender.id,
-         } 
-         presenceSocket.presenceHandler(pMessage)
-      }
+      // if (x.sender.id != getCookieName()) {
+      //    let pMessage = {
+      //     date: x.date,
+      //     sender: x.sender.id,
+      //    } 
+      //    presenceSocket.presenceHandler(pMessage)
+      // }
       // is the chat box open?
       
       console.log("chatBox", chatBox)
@@ -186,18 +186,10 @@ class MySocket {
     document.getElementById("content").innerHTML = c.body;
   }
   presenceHandler(text) {
-    console.log(text, typeof text, " here 22222222")
-    if ( typeof text != "string") {
-      console.log("query selector name", text.sender)
-      let presence = document.getElementById(text.sender)
-       let newP = presence
-      presence.remove()
-      let presCont = document.getElementById('presencecontainer')
-      presCont.prepend(newP)
-     
-    } else {
-      const m = JSON.parse(text)
+   
+    const m = JSON.parse(text)
     console.log(m.presences)
+    //reorder by online and offline
     let onlineUser = []
     let offlineUser = []
     if (m.presences) {
@@ -209,8 +201,11 @@ class MySocket {
      }})
     }
     onlineUser = onlineUser.concat(offlineUser)
+  // reorder by latest chat 
+   m.presences.sort(Date.parse(a.last_contacted_time)>Date.parse(b.last_contacted_time)?1:-1)
+   console.log("pres in time order", m.presences )
+    //remove old list     
     let presenceCont = document.getElementById("presencecontainer")
-    //remove old list 
     if (presenceCont.childElementCount != 0) {
       while (presenceCont.firstChild) {
       presenceCont.removeChild(presenceCont.lastChild);
@@ -268,7 +263,7 @@ class MySocket {
       presenceSocket.sendPresenceRequest()
     }
     console.log("Presences successfully updated")
-    }
+
     
     
   }
@@ -280,23 +275,26 @@ class MySocket {
     let children = content.childNodes;
     console.log("content children", children)
     for (let c of children) {
-      if (c.id != "submittedposts") {
-        console.log("child id", c.id)
-        let child = document.getElementById(`${c.id}`)
-        child.remove()
-      }
+      // if (c.id != "submittedposts") {
+        console.log("child", c)
+        // let child = document.getElementById(`${c.id}`)
+        c.remove()
+      // }
     }
-    let subPosts = document.createElement('div')
+    let post = document.createElement("div");
+    let button = document.createElement("button")
+    if (m.posts.length != 0) {
+      let subPosts = document.createElement('div')
     subPosts.id = "submittedposts"
     content.appendChild(subPosts)
     
     for (let p of m.posts) {
       const consp = p
-      let post = document.createElement("div");
+      
       post.className = "submittedpost"
       post.id = p.post_id
       post.innerHTML = "<b>Title: " + p.title + "</b>" + "<br>" + "<b>Nickname: " + "</b>" + p.nickname + "<br>" + "<b>Category: " + p.categories + "</b>" + "<br>" + p.body + "<br>";
-      let button = document.createElement("button")
+      
       button.className = "addcomment"
       button.innerHTML = "Comments"
       button.addEventListener('click', function (event, post = consp) {
@@ -304,13 +302,16 @@ class MySocket {
         contentSocket.sendContentRequest(event, post.post_id)
       });
       post.appendChild(button)
-      if ( document.getElementById("submittedposts") != null){
-        console.log("appending Postss")
-      document.getElementById("submittedposts").appendChild(post)
-      } else {
-        console.log("Submitted posts == null")
-      }
+     
     }
+    }
+    if ( document.getElementById("submittedposts") != null){
+      console.log("appending Postss")
+     document.getElementById("submittedposts").appendChild(post)
+    } else {
+      console.log("Submitted posts == null")
+    }
+    
   }
   sendNewCommentRequest(e) {
     console.log("adding comments",uName)

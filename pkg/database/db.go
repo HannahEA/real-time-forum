@@ -103,7 +103,8 @@ func InitialiseDB(path string, insertPlaceholders bool) {
 		CREATE TABLE IF NOT EXISTS "conversations" (
 			"convoID" TEXT,
 			"participants"	TEXT,
-			"participants2" TEXT
+			"participants2" TEXT,
+			"lastMessageTime" TEXT
 			);
 	`)
 	if errConversations != nil {

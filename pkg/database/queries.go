@@ -14,7 +14,7 @@ type User struct {
 	LastName  string `json:"lastname,omitempty"`
 	Email     string `json:"email,omitempty"`
 	Password  string `json:"password,omitempty"`
-	LoggedIn  bool `json:"loggedin,omitempty"`
+	LoggedIn  bool   `json:"loggedin,omitempty"`
 }
 type Post struct {
 	PostID     string    `json:"post_id,omitempty"`
@@ -53,9 +53,9 @@ type Chat struct {
 type Presence struct {
 	ID                string `json:"id"`
 	Nickname          string `json:"nickname"`
-	Online            bool `json:"online"`
+	Online            bool   `json:"online"`
 	LastContactedTime string `json:"last_contacted_time"`
-	Notification      bool `json:"notification,omitempty"`
+	Notification      bool   `json:"notification,omitempty"`
 }
 
 type Login struct {
@@ -77,7 +77,7 @@ func GetUsers() ([]User, error) {
 	var lastname string
 	var email string
 	var password string
-	var loggedin string 
+	var loggedin string
 	var lB bool
 
 	for rows.Next() {
@@ -85,7 +85,7 @@ func GetUsers() ([]User, error) {
 		if err != nil {
 			return users, fmt.Errorf("GetUsers rows.Scan error: %+v\n", err)
 		}
-		if loggedin == "true"{
+		if loggedin == "true" {
 			lB = true
 		} else {
 			lB = false
@@ -269,27 +269,36 @@ func GetChat(convoID string) ([]Chat, error) {
 
 func GetUserFromConversations(nickname, nickname2 string) (ConvoParticipants, error) {
 	user := ConvoParticipants{}
-
+	fmt.Println("user conversation?:", nickname, nickname2)
 	rows, err := DB.Query(`SELECT * FROM conversations WHERE participants =? AND participants2 =?`, nickname, nickname2)
 	if err != nil {
-		return user, fmt.Errorf("GetUsers DB Query error: %+v\n", err)
+		fmt.Printf("GetUsers DB Query error: %+v\n", err)
+		return user, err
 	}
+	fmt.Println("rows", rows)
 	var convoId string
 	var participant1 string
 	var participant2 string
+	var lastMessageTime string
+	// var lastMessageTime string
 	for rows.Next() {
-		err := rows.Scan(&convoId, &participant1, &participant2)
+		fmt.Println("rows", rows)
+		err := rows.Scan(&convoId, &participant1, &participant2, &lastMessageTime)
 		if err != nil {
-			return user, fmt.Errorf("GetUsers rows.Scan error: %+v\n", err)
+			fmt.Printf("GetUsers rows.Scan error: %+v\n", err)
+			return user, err
 		}
+
 		user = ConvoParticipants{
 			ConvoID:      convoId,
 			Participant1: participant1,
 			Participant2: participant2,
 		}
+		fmt.Println("user", user)
 	}
 	err = rows.Err()
 	if err != nil {
+		fmt.Printf("GetUsers rows loop error: %+v\n", err)
 		return user, err
 	}
 	fmt.Println(user, "users part of convo")

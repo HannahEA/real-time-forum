@@ -55,17 +55,17 @@ func (m *PresenceMessage) Handle() error {
 	//get username of user logged in on this browser
 	var username string
 	var login bool
-
+	var chat bool
 	if m != nil {
 		fmt.Println("Presence Username", m.Username)
 		username = m.Username
 	}
 	// get all presences
-	presences, err := GetPresences()
-	if err != nil {
-		return fmt.Errorf("OnPresenceConnect (GetPresences) error: %+v", err)
-	}
-	fmt.Println("OnPresenceConnect: get presences successful", presences)
+	// presences, err := GetPresences()
+	// if err != nil {
+	// 	return fmt.Errorf("OnPresenceConnect (GetPresences) error: %+v", err)
+	// }
+	// fmt.Println("OnPresenceConnect: get presences successful", presences)
 
 	var broadErr error
 	fmt.Println("username", username, "sockets", BrowserSockets[username])
@@ -73,6 +73,9 @@ func (m *PresenceMessage) Handle() error {
 		fmt.Println("Browser Logout")
 		//loggin out
 		login = false
+	} else if m.Login == "chat" {
+		login = false
+		chat = true
 	} else {
 		//login or browser refresh
 		if BrowserSockets[username] != nil {
@@ -93,9 +96,10 @@ func (m *PresenceMessage) Handle() error {
 
 		for i, conn := range brow {
 			if i == 1 {
-				if (name == username && login) || name != username {
+				if (name == username && login) || (name != username && !chat) || (chat && name == username) {
 					fmt.Println("updating presences...")
 					//for browser that users have logged in to, remove logged in user from user list before broadcasting
+					presences, _ := GetPresences(name)
 					finalM := changePresList(presences, name, conn)
 					if name == username {
 						finalM.Presences = checkNotifications(username, finalM.Presences)
@@ -116,12 +120,15 @@ func (m *PresenceMessage) Handle() error {
 	return broadErr
 }
 
-func GetPresences() ([]database.Presence, error) {
+func GetPresences(username string) ([]database.Presence, error) {
+	//presence list will be differnt for every user because of timestamps
+	// must receive user
 	presences := []database.Presence{}
 	users, err := database.GetUsers()
 	if err != nil {
 		return nil, fmt.Errorf("GetUsers (getPresences) error: %+v", err)
 	}
+	// alphabetical order
 	sort.SliceStable(users[:], func(i, j int) bool {
 		return users[i].Nickname < users[j].Nickname
 	})
@@ -134,6 +141,41 @@ func GetPresences() ([]database.Presence, error) {
 		})
 
 	}
+	//check if presence has a conversation with user
+	// add a timestamp to every presence from the convo database
+	//notifciation order clash?
+
+	rows, err := database.DB.Query("SELECT * FROM conversations WHERE participants = ?", username)
+	if err != nil {
+		fmt.Printf("LatestChatConvo: DB Query Error:%+v\n", err)
+	}
+	var convoId string
+	var participant1 string
+	var participant2 string
+	var latestTime string
+
+	for rows.Next() {
+		fmt.Println("rows latest user:", rows)
+		scanErr := rows.Scan(&convoId, &participant1, &participant2, &latestTime)
+		if scanErr != nil {
+			fmt.Printf("LatestChatConvo: Scan Error:%+v\n", err)
+		}
+		for i, pres := range presences {
+			if pres.Nickname == participant2 {
+				presences[i].LastContactedTime = latestTime
+
+			}
+		}
+
+	}
+	fmt.Println("presences with time", presences)
+	rowErr := rows.Err()
+	if rowErr != nil {
+		fmt.Printf("LatestChatConvo: Rows Loop Error:%+v\n", err)
+	}
+
+	// on login, logout and refresh presence list generated for every user
+	// when presence handler is called due to new chat only reciever (username sent over) needs to updated
 	return presences, nil
 }
 

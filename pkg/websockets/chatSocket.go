@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"real-time-forum/pkg/database"
+	"strings"
+	newTime "time"
 
 	"github.com/gorilla/websocket"
 	uuid "github.com/satori/go.uuid"
@@ -102,6 +104,11 @@ func (m *ChatMessage) Handle(s *socket) error {
 	var time = m.Timestamp
 	var convoCheckID string
 	var reciever string
+	//find last sent message before new chat or convo is added to DB
+	lastLatestSender := LatestChatConvo(m.Conversations[0].Participants[1].ID)
+	fmt.Println("Function worked: found the latest user:", lastLatestSender)
+
+	//Create new chat and convo if needed 
 	for i, convo := range m.Conversations {
 		var participant1 = convo.Participants[0]
 		// var p1 = fmt.Sprintf("%+v", participant1.ID)
@@ -139,20 +146,38 @@ func (m *ChatMessage) Handle(s *socket) error {
 		}
 		m.Conversations[i] = convo
 	}
-
+	//get latest chat from database
 	var chats, _ = database.GetChat(convoCheckID)
 	var newChat = &chats[len(chats)-1]
-	// var rCon = BrowserSockets[reciever][2]
+	//add timestamp of latest message to convo DB
+	AddDatetoConvoDB(m.Timestamp, m.Conversations[0].Participants[0].ID, m.Conversations[0].Participants[1].ID)
 
+	//if the last person to send this user a message is not the same as the current chat sender then the presence list needs to be updated
+	if m.Conversations[0].Participants[0].ID != lastLatestSender {
+		//call presence handler
+		m := &PresenceMessage{
+			// reciever
+			Username: m.Conversations[0].Participants[1].ID,
+			Login:    "chat",
+		}
+		err := m.Handle()
+		if err != nil {
+			fmt.Print("Chat Handler: Presence Handler Error: ")
+			return err
+		}
+	}
+	// send to sender
 	err2 := Broadcast(s.con, newChat)
 	if err2 != nil {
 		fmt.Print("Chat Handler: unable to broadcast new message to sender")
 		return err2
 	}
-	fmt.Println("Chat Handler: broadcast new messa ge to sender")
+	fmt.Println("Chat Handler: broadcast new message to sender")
+
+	//send to reciever
 	if BrowserSockets[reciever] == nil {
 		fmt.Println("Broser Socket", reciever, BrowserSockets[reciever])
-		// notification when receiver is logged out sender reciever
+		// notification when receiver is logged out
 		CreateNotification(m.Conversations[0].Participants[0].ID, m.Conversations[0].Participants[1].ID)
 	} else {
 		err3 := Broadcast(BrowserSockets[reciever][0], newChat)
@@ -162,6 +187,7 @@ func (m *ChatMessage) Handle(s *socket) error {
 		}
 		fmt.Println("Chat Handler: broadcast new message to reciever", reciever)
 	}
+	//change convo DB: update latest message time
 
 	return nil
 }
@@ -195,7 +221,7 @@ func CreateChat(chat database.Chat) (string, error) {
 
 func CreateConversation(conversations *database.Conversation) (string, error) {
 	log.Println("inserting into convo db")
-	stmt, err := database.DB.Prepare("INSERT INTO conversations (convoID, participants, participants2) VALUES (?, ?,?);")
+	stmt, err := database.DB.Prepare("INSERT INTO conversations (convoID, participants, participants2, lastMessageTime) VALUES (?, ?,?,?);")
 	defer stmt.Close()
 	if err != nil {
 		return "", fmt.Errorf("CreateConversations DB Prepare error: %+v\n", err)
@@ -204,15 +230,78 @@ func CreateConversation(conversations *database.Conversation) (string, error) {
 		conversations.ConvoID = uuid.NewV4().String()
 	}
 
-	_, err = stmt.Exec(conversations.ConvoID, conversations.Participants[0].ID, conversations.Participants[1].ID)
+	_, err = stmt.Exec(conversations.ConvoID, conversations.Participants[0].ID, conversations.Participants[1].ID, "")
 	if err != nil {
 		return "", fmt.Errorf("CreateConversations Exec error: %+v\n", err)
 
 	}
-	_, err2 := stmt.Exec(conversations.ConvoID, conversations.Participants[1].ID, conversations.Participants[0].ID)
+	_, err2 := stmt.Exec(conversations.ConvoID, conversations.Participants[1].ID, conversations.Participants[0].ID, "")
 	if err2 != nil {
 		return "", fmt.Errorf("CreateConversations Exec error: %+v\n", err2)
 
 	}
 	return conversations.ConvoID, err
+}
+
+// add the time of the last chat sent in this conversation to the convo database
+func AddDatetoConvoDB(date string, sender string, reciever string) {
+	stmt, err := database.DB.Prepare(`UPDATE "conversations" SET "lastMessageTime" = ? WHERE "participants" = ? AND "participants2" = ? OR "participants" = ? AND "participants2" = ?`)
+	defer stmt.Close()
+	if err != nil {
+		fmt.Printf("AddDatetoConvoDB: DB Prepare Error:%+v\n", err)
+	}
+	_, err2 := stmt.Exec(date, sender, reciever, reciever, sender)
+	if err2 != nil {
+		fmt.Printf("AddDatetoConvoDB: DB Exec Error:%+v\n", err)
+	}
+}
+
+// who was the last person to send this user a message
+func LatestChatConvo(user string) string {
+	rows, err := database.DB.Query("SELECT * FROM conversations WHERE participants = ?", user)
+	if err != nil {
+		fmt.Printf("LatestChatConvo: DB Query Error:%+v\n", err)
+	}
+	var convoId string
+	var participant1 string
+	var participant2 string
+	var time string
+	var latestTime newTime.Time
+	var latestUser string
+	for rows.Next() {
+		fmt.Println("rows latest user:", rows)
+		scanErr := rows.Scan(&convoId, &participant1, &participant2, &time)
+		if scanErr != nil {
+			fmt.Printf("LatestChatConvo: Scan Error:%+v\n", err)
+		}
+		time = strings.Replace(time, ",", "", 1)
+		fullTimeArr := strings.Split(time, " ")
+		//reformat date
+		dateTimeArr := strings.Split(fullTimeArr[0], "/")
+		dateTimeArr[2], dateTimeArr[0] = dateTimeArr[0], dateTimeArr[2]
+		fullTimeArr[0] = strings.Join(dateTimeArr, "-")
+		// reformat time
+		timeArr := strings.Split(fullTimeArr[1], ":")
+		timeArr = timeArr[:2]
+		fullTimeArr[1] = strings.Join(timeArr, ":")
+		//rejoin date and time
+		time = strings.Join(fullTimeArr, " ")
+		fmt.Println("time", time)
+		times, err := newTime.Parse("2006-01-02 15:04", time)
+		if err != nil {
+			fmt.Printf("Error LatestChatConvo: time.Parse %v\n", err)
+		}
+		fmt.Println("latest message time", latestTime)
+		fmt.Println("conversation time", times)
+		if times.After(latestTime) {
+
+			latestTime = times
+			latestUser = participant2
+		}
+	}
+	rowErr := rows.Err()
+	if rowErr != nil {
+		fmt.Printf("LatestChatConvo: Rows Loop Error:%+v\n", err)
+	}
+	return latestUser
 }
