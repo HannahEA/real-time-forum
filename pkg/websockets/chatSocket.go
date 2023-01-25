@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"real-time-forum/pkg/database"
-	"strings"
 	newTime "time"
 
 	"github.com/gorilla/websocket"
@@ -101,14 +100,15 @@ func (m *ChatMessage) Handle(s *socket) error {
 
 	fmt.Println("chat message func", m.Conversations, "type", m.Type)
 	fmt.Println("time after this", m.Timestamp, "chat")
-	var time = m.Timestamp
+	time := newTime.Now().String()
+	fmt.Println("time in golang", time)
 	var convoCheckID string
 	var reciever string
 	//find last sent message before new chat or convo is added to DB
 	lastLatestSender := LatestChatConvo(m.Conversations[0].Participants[1].ID)
 	fmt.Println("Function worked: found the latest user:", lastLatestSender)
 
-	//Create new chat and convo if needed 
+	//Create new chat and convo if needed
 	for i, convo := range m.Conversations {
 		var participant1 = convo.Participants[0]
 		// var p1 = fmt.Sprintf("%+v", participant1.ID)
@@ -274,19 +274,19 @@ func LatestChatConvo(user string) string {
 		if scanErr != nil {
 			fmt.Printf("LatestChatConvo: Scan Error:%+v\n", err)
 		}
-		time = strings.Replace(time, ",", "", 1)
-		fullTimeArr := strings.Split(time, " ")
-		//reformat date
-		dateTimeArr := strings.Split(fullTimeArr[0], "/")
-		dateTimeArr[2], dateTimeArr[0] = dateTimeArr[0], dateTimeArr[2]
-		fullTimeArr[0] = strings.Join(dateTimeArr, "-")
-		// reformat time
-		timeArr := strings.Split(fullTimeArr[1], ":")
-		timeArr = timeArr[:2]
-		fullTimeArr[1] = strings.Join(timeArr, ":")
-		//rejoin date and time
-		time = strings.Join(fullTimeArr, " ")
-		fmt.Println("time", time)
+		// time = strings.Replace(time, ",", "", 1)
+		// fullTimeArr := strings.Split(time, " ")
+		// //reformat date
+		// dateTimeArr := strings.Split(fullTimeArr[0], "/")
+		// dateTimeArr[2], dateTimeArr[0] = dateTimeArr[0], dateTimeArr[2]
+		// fullTimeArr[0] = strings.Join(dateTimeArr, "-")
+		// // reformat time
+		// timeArr := strings.Split(fullTimeArr[1], ":")
+		// timeArr = timeArr[:2]
+		// fullTimeArr[1] = strings.Join(timeArr, ":")
+		// //rejoin date and time
+		// time = strings.Join(fullTimeArr, " ")
+		// fmt.Println("time", time)
 		times, err := newTime.Parse("2006-01-02 15:04", time)
 		if err != nil {
 			fmt.Printf("Error LatestChatConvo: time.Parse %v\n", err)

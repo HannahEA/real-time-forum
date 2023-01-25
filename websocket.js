@@ -1,5 +1,5 @@
 //TODO: fix const time as it is not formatted correctly and add where time/date is needed
-const time = () => { return new Date().toLocaleString() };
+const time = () => { return new Date() };
 let uName = ""
 let sender_id
 let reciev_id 
@@ -153,7 +153,7 @@ class MySocket {
 //let prevHeight =document.getElementById("newchatscontainer").scrollHeight
 
       for ( position = chatL ; position>= chatL - 9; position--) {
-        if (position == 0) {
+        if (position == -1) {
           break
         }
          let p = chats[position]
@@ -169,7 +169,7 @@ class MySocket {
         console.log("y position", chatBox.scrollTop) 
         if (chatBox.scrollTop == 0) {
             for (let i = 0; i<=9;i++ ) { 
-              if (position == 0) {
+              if (position == -1) {
                 break
               }
               let p = chats[position]
@@ -212,8 +212,20 @@ class MySocket {
     }
     onlineUser = onlineUser.concat(offlineUser)
   // reorder by latest chat 
-   m.presences.sort(Date.parse(a.last_contacted_time)>Date.parse(b.last_contacted_time)?1:-1)
-   console.log("pres in time order", m.presences )
+  onlineUser.map(function (element, i) {
+   var date1= new Date(onlineUser[i].last_contacted_time)
+   onlineUser[i].last_contacted_time = date1
+   return onlineUser[i]
+    
+  })
+  
+  console.log(onlineUser)
+    // var date1 = new Date(onlineUser[i].last_contacted_time)
+    // console.log( date1)
+   
+ onlineUser.sort(function(a,b) {return b.last_contacted_time-a.last_contacted_time})
+  console.log(onlineUser)
+ //  console.log("pres in time order", m.presences )
     //remove old list     
     let presenceCont = document.getElementById("presencecontainer")
     if (presenceCont.childElementCount != 0) {
