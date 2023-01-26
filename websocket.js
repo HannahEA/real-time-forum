@@ -173,7 +173,7 @@ class MySocket {
           chat.innerHTML = "<b>Me: " + p.sender.id + "</b>" + "<br>" + "<b>Date: " + "</b>" + reformatTime(date1)+"<br>" + p.body + "<br>";
           document.getElementById("newchatscontainer").prepend(chat)
       }
-      // chatBox.scrollTop = chatBox.scrollHeight;
+      chatBox.scrollTop = chatBox.scrollHeight;
       position--
       chatBox.addEventListener('scroll', (event)=>{
        

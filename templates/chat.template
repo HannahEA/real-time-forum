@@ -38,10 +38,11 @@
             margin-top: 10px;
             border: 2px solid rgb(255, 255, 255);
             justify-self: right;
+            max-height: 490px;
             
         }
         #newchatscontainer {
-            max-height: 500px;
+            max-height: 400px;
             overflow: scroll;
         }
     </style>
