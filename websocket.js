@@ -175,35 +175,55 @@ class MySocket {
       }
       chatBox.scrollTop = chatBox.scrollHeight;
       position--
-      chatBox.addEventListener('scroll', (event)=>{
-       
-        if (chatBox.scrollTop == 0) {
-            for (let i = 0; i<=9;i++ ) { 
-              console.log("position2", position)
-              if (position == -1) {
-                console.log("position is -1")
-                break
-              }
-              let p = chats[position]
-              let chat = document.createElement("div");
-              chat.className = "submittedchat"
-              chat.id = p.chat_id
-              let date1 = new Date(p.date)
-              chat.innerHTML = "<b>Me: " + p.sender.id + "</b>" + "<br>" + "<b>Date: " + "</b>" + reformatTime(date1) + "<br>" + p.body + "<br>";
-              document.getElementById("newchatscontainer").prepend(chat)
-              position--
-          
-          }
+
+      let time = null 
+      let wait = 100
+     
+      function  debounce(lastCallTime) {
+        if (time==null) {
+          time = Date.now()
+        } 
+        if(lastCallTime-time>wait) {
+          time = null
+          return true 
+        }
+        return false
+      }
+    chatBox.addEventListener('scroll', ()=>{
+       if (debounce(Date.now())){
+        console.log("debounce owrking")
+        if (chatBox.scrollTop < 30) {
+          for (let i = 0; i<=9;i++ ) { 
+            console.log("position2", position)
+            if (position == -1) {
+              console.log("position is -1")
+              break
+            }
+            let p = chats[position]
+            let chat = document.createElement("div");
+            chat.className = "submittedchat"
+            chat.id = p.chat_id
+            let date1 = new Date(p.date)
+            chat.innerHTML = "<b>Me: " + p.sender.id + "</b>" + "<br>" + "<b>Date: " + "</b>" + reformatTime(date1) + "<br>" + p.body + "<br>";
+            document.getElementById("newchatscontainer").prepend(chat)
+            position--
+        
+        }
+      }
+       }
+      }
+    )
+    }
           // chatBox.scrollTop = chatBox.scrollHeight;
           
           //get the current height of the chatbox 
           //let currentHeight = document.getElementById("newchatscontainer").scrollHeight
           //Scroll from top by currentheight - previous height
           //document.getElementById("newchatscontainer").scrollTo = currentHeight - prevHeight
-      }})
+      
      }
     
-  }
+  
   contentHandler(text) {
     const c = JSON.parse(text)
     console.log("content", c)
@@ -412,7 +432,10 @@ class MySocket {
             }
           ]
         }
-        this.mysocket.send(JSON.stringify(m));
+        if (getCookieName() != "") {
+  this.mysocket.send(JSON.stringify(m));
+        }
+        
         document.getElementById('commentbody').value = ""
       }
     }
