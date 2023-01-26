@@ -473,11 +473,13 @@ class MySocket {
   }
   sendContentRequest(e, post_id = "") {
     console.log("Sending content request...")
-    this.mysocket.send(JSON.stringify({
-      type: "content",
-      resource: e.target.id,
-      post_id: post_id,
-    }));
+    if (e.target.id == "comment" && getCookieName()!= "" || e.target.id != "comment") {
+      this.mysocket.send(JSON.stringify({
+        type: "content",
+        resource: e.target.id,
+        post_id: post_id,
+      }));
+    }
   }
   // sendChatContentRequest(e, chat_id = "") {
   //   this.mysocket.send(JSON.stringify({
