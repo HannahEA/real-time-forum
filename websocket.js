@@ -173,12 +173,12 @@ class MySocket {
           chat.innerHTML = "<b>Me: " + p.sender.id + "</b>" + "<br>" + "<b>Date: " + "</b>" + reformatTime(date1)+"<br>" + p.body + "<br>";
           document.getElementById("newchatscontainer").prepend(chat)
       }
-      // chatBox.scrollTop = chatBox.scrollHeight;
+      chatBox.scrollTop = chatBox.scrollHeight;
       position--
       chatBox.addEventListener('scroll', (event)=>{
        
         if (chatBox.scrollTop == 0) {
-            for (let i = 0; i<=9;i++ ) { 
+            for (let i = 0; i<=10;i++ ) { 
               console.log("position2", position)
               if (position == -1) {
                 console.log("position is -1")
@@ -194,7 +194,7 @@ class MySocket {
               position--
           
           }
-          // chatBox.scrollTop = chatBox.scrollHeight;
+          chatBox.scrollTop = chatBox.scrollHeight;
           
           //get the current height of the chatbox 
           //let currentHeight = document.getElementById("newchatscontainer").scrollHeight

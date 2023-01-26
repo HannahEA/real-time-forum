@@ -41,7 +41,7 @@
             
         }
         #newchatscontainer {
-            max-height: 500px;
+            max-height: 550px;
             overflow: scroll;
         }
     </style>

@@ -32,11 +32,13 @@ header {
     display: flex;
     justify-content: space-evenly;
 }
+
 footer {
     background: #a37bd8;
     padding: 3rem;
     padding: 2rem 3rem;
-}
+} 
+
 #logout {
     display: none;
 }
